@@ -1,0 +1,12 @@
+.sale-date {
+  font-size: 13px;
+}
+
+.sale-time {
+  font-size: 11px;
+  color: var(--muted-foreground, #9ca3af);
+}
+
+.sale-total {
+  font-weight: 600;
+}

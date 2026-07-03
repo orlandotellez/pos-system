@@ -1,0 +1,33 @@
+.container {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.content {
+  text-align: center;
+}
+
+.title {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--foreground);
+}
+
+.subtitle {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: var(--muted-foreground);
+}
+
+.link {
+  color: var(--muted-foreground);
+  text-decoration: underline;
+  font-size: 14px;
+}
+
+.link:hover {
+  color: var(--foreground);
+}

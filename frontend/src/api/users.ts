@@ -1,0 +1,53 @@
+import { api } from "./client";
+import type { Role } from "@/api/auth";
+
+export interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  email_verified: boolean;
+  role: Role;
+  phone?: string;
+  image?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserListResponse {
+  users: UserResponse[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface CreateUserPayload {
+  name: string;
+  email: string;
+  password: string;
+  role?: Role;
+  phone?: string;
+}
+
+export interface UpdateUserPayload {
+  name?: string;
+  email?: string;
+  role?: Role;
+  phone?: string;
+}
+
+export const usersApi = {
+  list: (params?: { search?: string; page?: number; limit?: number }) =>
+    api.get<UserListResponse>("/users", params),
+
+  getById: (id: string) =>
+    api.get<UserResponse>(`/users/${id}`),
+
+  create: (data: CreateUserPayload) =>
+    api.post<UserResponse>("/users", data),
+
+  update: (id: string, data: UpdateUserPayload) =>
+    api.put<UserResponse>(`/users/${id}`, data),
+
+  delete: (id: string) =>
+    api.delete<{ message: string }>(`/users/${id}`),
+};

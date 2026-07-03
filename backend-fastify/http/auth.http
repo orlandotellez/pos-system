@@ -1,0 +1,99 @@
+### ========================================
+###             AUTH ENDPOINTS
+### ========================================
+### Base URL: {{apiUrl}}/auth
+### Los tokens se manejan vía cookies (httpOnly).
+### El refresh token también puede enviarse en el body.
+### ========================================
+
+### ---------- REGISTER ----------
+### [Requiere adminGuard] Crea una nueva cuenta.
+### Primero logueate como admin, luego ejecutá este request.
+POST {{apiUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "{{userName}}",
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "role": "admin"
+}
+
+### ---------- LOGIN ----------
+### Inicia sesión. Las cookies accessToken y refreshToken se setean automáticamente.
+POST {{apiUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### ---------- REFRESH TOKEN ----------
+### Refresca el access token usando el refresh token (body o cookie).
+POST {{apiUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### ---------- LOGOUT ----------
+### Cierra sesión y revoca el refresh token.
+POST {{apiUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### ---------- VERIFY EMAIL ----------
+### Verifica el email con el código enviado.
+POST {{apiUrl}}/auth/verify-email
+Content-Type: application/json
+
+{
+  "identifier": "{{email}}",
+  "code": "123456"
+}
+
+### ---------- RESEND VERIFICATION ----------
+### Reenvía el código de verificación.
+POST {{apiUrl}}/auth/resend-verification
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### ---------- FORGOT PASSWORD ----------
+### Solicita restablecimiento de contraseña.
+POST {{apiUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### ---------- RESET PASSWORD ----------
+### Restablece la contraseña con el código recibido.
+POST {{apiUrl}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "code": "123456",
+  "newPassword": "{{newPassword}}"
+}
+
+### ========================================
+###       ENDPOINTS PROTEGIDOS (authGuard)
+### ========================================
+
+### ---------- GET SESSIONS ----------
+### Lista todas las sesiones activas del usuario autenticado.
+GET {{apiUrl}}/auth/sessions
+
+### ---------- REVOKE SESSION ----------
+### Revoca una sesión específica por ID.
+DELETE {{apiUrl}}/auth/sessions/{{sessionId}}

@@ -1,0 +1,18 @@
+.product-name {
+  font-weight: 500;
+}
+
+.product-meta {
+  font-size: 11px;
+  color: var(--muted-foreground, #9ca3af);
+  margin-top: 2px;
+}
+
+.product-barcode {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.product-price {
+  font-weight: 500;
+}

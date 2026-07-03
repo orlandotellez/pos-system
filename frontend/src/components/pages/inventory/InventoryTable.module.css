@@ -1,0 +1,23 @@
+.inventory-name {
+  font-weight: 500;
+}
+
+.inventory-barcode {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--muted-foreground, #9ca3af);
+}
+
+.inventory-threshold {
+  color: var(--muted-foreground, #9ca3af);
+}
+
+.inventory-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  color: white;
+}

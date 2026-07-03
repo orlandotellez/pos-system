@@ -1,0 +1,91 @@
+const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api/v1";
+
+export class ApiError extends Error {
+  status: number;
+  data: unknown;
+
+  constructor(status: number, data: unknown) {
+    const message = extractErrorMessage(data) ?? `HTTP ${status}`;
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.data = data;
+  }
+}
+
+function extractErrorMessage(data: unknown): string | null {
+  if (typeof data === "object" && data !== null) {
+    // Object with message field
+    if ("message" in data && typeof (data as Record<string, unknown>).message === "string") {
+      return (data as Record<string, unknown>).message as string;
+    }
+    // Array of Zod errors — grab first message
+    if (Array.isArray(data) && data.length > 0 && "message" in data[0]) {
+      return String(data[0].message);
+    }
+  }
+  return null;
+}
+
+function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem("auth-token");
+  } catch {
+    return null;
+  }
+}
+
+async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  params?: Record<string, string | number | boolean | undefined>,
+): Promise<T> {
+  const url = new URL(`${BASE_URL}${path}`);
+
+  if (params) {
+    for (const [key, val] of Object.entries(params)) {
+      if (val !== undefined) url.searchParams.set(key, String(val));
+    }
+  }
+
+  const headers: Record<string, string> = {};
+
+  const token = getAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const res = await fetch(url.toString(), {
+    method,
+    headers,
+    credentials: "include",
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+
+  if (res.status === 204) return undefined as T;
+
+  const data = await res.json();
+
+  if (!res.ok) throw new ApiError(res.status, data);
+
+  return data as T;
+}
+
+export const api = {
+  get: <T>(path: string, params?: Record<string, string | number | boolean | undefined>) =>
+    request<T>("GET", path, undefined, params),
+
+  post: <T>(path: string, body?: unknown) =>
+    request<T>("POST", path, body),
+
+  put: <T>(path: string, body?: unknown) =>
+    request<T>("PUT", path, body),
+
+  delete: <T>(path: string) =>
+    request<T>("DELETE", path),
+};

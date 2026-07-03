@@ -1,0 +1,82 @@
+### ========================================
+###            SALES ENDPOINTS
+### ========================================
+### Base URL: {{apiUrl}}/sales
+### Todos requieren authGuard (cookies de sesión).
+### ========================================
+
+### ---------- LIST SALES ----------
+### Lista ventas con filtros opcionales.
+GET {{apiUrl}}/sales?page=1&limit=20
+
+### ---------- LIST SALES (por rango de fechas) ----------
+GET {{apiUrl}}/sales?start_date=2026-01-01&end_date=2026-12-31&page=1&limit=50
+
+### ---------- LIST SALES (por método de pago) ----------
+GET {{apiUrl}}/sales?payment_method=efectivo&page=1&limit=20
+
+### ---------- GET SALE BY ID ----------
+GET {{apiUrl}}/sales/{{saleId}}
+
+### ---------- CREATE SALE ----------
+### Registra una venta completa con sus items.
+POST {{apiUrl}}/sales
+Content-Type: application/json
+
+{
+  "subtotal": 220.00,
+  "tax_total": 35.20,
+  "discount": 0,
+  "total": 255.20,
+  "payment_method": "efectivo",
+  "amount_received": 300.00,
+  "change_given": 44.80,
+  "items": [
+    {
+      "product_id": "{{productId}}",
+      "product_name": "Coca-Cola 600ml",
+      "quantity": 2,
+      "unit_price": 25.00,
+      "tax_rate": 16.00,
+      "line_total": 50.00
+    },
+    {
+      "product_id": "{{productId2}}",
+      "product_name": "Tortas de Harina 100g",
+      "quantity": 10,
+      "unit_price": 17.00,
+      "tax_rate": 16.00,
+      "line_total": 170.00
+    }
+  ]
+}
+
+### ---------- CREATE SALE (tarjeta, sin cambio) ----------
+POST {{apiUrl}}/sales
+Content-Type: application/json
+
+{
+  "subtotal": 100.00,
+  "tax_total": 16.00,
+  "discount": 0,
+  "total": 116.00,
+  "payment_method": "tarjeta",
+  "items": [
+    {
+      "product_id": "{{productId}}",
+      "product_name": "Coca-Cola 600ml",
+      "quantity": 4,
+      "unit_price": 25.00,
+      "tax_rate": 16.00,
+      "line_total": 100.00
+    }
+  ]
+}
+
+### ========================================
+###             REPORT ENDPOINT
+### ========================================
+
+### ---------- SALES REPORT ----------
+### Reporte de ventas agrupado por período.
+GET {{apiUrl}}/sales/report?start_date=2026-01-01&end_date=2026-06-22

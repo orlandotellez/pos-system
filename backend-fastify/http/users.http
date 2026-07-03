@@ -1,0 +1,56 @@
+### ========================================
+###            USERS ENDPOINTS
+### ========================================
+### Base URL: {{apiUrl}}/users
+### Todos requieren authGuard + adminGuard.
+### ========================================
+
+### ---------- LIST USERS ----------
+### Lista usuarios con paginación y búsqueda opcional.
+GET {{apiUrl}}/users?page=1&limit=10
+
+### ---------- LIST USERS (con búsqueda) ----------
+GET {{apiUrl}}/users?search=admin&page=1&limit=10
+
+### ---------- GET USER BY ID ----------
+GET {{apiUrl}}/users/{{userId}}
+
+### ---------- CREATE USER (cajero) ----------
+### Crea un nuevo usuario con rol cajero.
+POST {{apiUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Cajero Juan",
+  "email": "cajero@pos.com",
+  "password": "password123",
+  "role": "cajero",
+  "phone": "555-0001"
+}
+
+### ---------- CREATE USER (admin) ----------
+### Crea un nuevo usuario con rol admin.
+POST {{apiUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Admin Secundario",
+  "email": "admin2@pos.com",
+  "password": "password123",
+  "role": "admin"
+}
+
+### ---------- UPDATE USER ----------
+### Actualiza campos de un usuario existente.
+PUT {{apiUrl}}/users/{{userId}}
+Content-Type: application/json
+
+{
+  "name": "Cajero Juan Actualizado",
+  "role": "cajero",
+  "phone": "555-9999"
+}
+
+### ---------- DELETE USER ----------
+### Elimina un usuario del sistema.
+DELETE {{apiUrl}}/users/{{userId}}

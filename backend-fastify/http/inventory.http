@@ -1,0 +1,64 @@
+### ========================================
+###          INVENTORY ENDPOINTS
+### ========================================
+### Base URL: {{apiUrl}}/inventory
+### Todos requieren authGuard (cookies de sesión).
+### ========================================
+
+### ---------- LIST MOVEMENTS ----------
+### Lista movimientos de inventario con filtros.
+GET {{apiUrl}}/inventory?page=1&limit=20
+
+### ---------- LIST MOVEMENTS (por producto) ----------
+GET {{apiUrl}}/inventory?product_id={{productId}}&page=1&limit=20
+
+### ---------- LIST MOVEMENTS (por tipo) ----------
+GET {{apiUrl}}/inventory?movement_type=entrada&page=1&limit=20
+
+### ---------- GET MOVEMENTS BY PRODUCT ----------
+### Obtiene todos los movimientos de un producto específico.
+GET {{apiUrl}}/inventory/product/{{productId}}
+
+### ---------- CREATE MOVEMENT (entrada) ----------
+### Registra una entrada de inventario.
+POST {{apiUrl}}/inventory
+Content-Type: application/json
+
+{
+  "product_id": "{{productId}}",
+  "movement_type": "entrada",
+  "quantity": 50,
+  "note": "Reabastecimiento proveedor"
+}
+
+### ---------- CREATE MOVEMENT (salida) ----------
+### Registra una salida de inventario (ej: merma, ajuste).
+POST {{apiUrl}}/inventory
+Content-Type: application/json
+
+{
+  "product_id": "{{productId}}",
+  "movement_type": "salida",
+  "quantity": 2,
+  "note": "Producto dañado"
+}
+
+### ---------- CREATE MOVEMENT (ajuste) ----------
+### Ajuste manual de inventario.
+POST {{apiUrl}}/inventory
+Content-Type: application/json
+
+{
+  "product_id": "{{productId}}",
+  "movement_type": "ajuste",
+  "quantity": 5,
+  "note": "Ajuste por conteo físico"
+}
+
+### ========================================
+###           LOW STOCK ENDPOINT
+### ========================================
+
+### ---------- LOW STOCK PRODUCTS ----------
+### Productos por debajo del umbral mínimo.
+GET {{apiUrl}}/inventory/low-stock

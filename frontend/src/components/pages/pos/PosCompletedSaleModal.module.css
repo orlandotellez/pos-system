@@ -1,0 +1,186 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.modal {
+  background: var(--background);
+  border-radius: 12px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  text-align: center;
+  padding: 24px 24px 0;
+}
+
+.icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.ticket {
+  padding: 40px 24px;
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  color: var(--foreground);
+  margin: 0 24px 16px;
+  border-radius: 8px;
+}
+
+.storeName {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.address,
+.phone {
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.date {
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.ticketId {
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.divider {
+  border-top: 1px dashed var(--border);
+  margin: 10px 0;
+}
+
+.footer {
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tdLeft {
+  padding: 2px 4px 2px 0;
+  vertical-align: top;
+}
+
+.tdRight {
+  padding: 2px 0 2px 4px;
+  text-align: right;
+  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+}
+
+.tdSub {
+  padding: 1px 4px 1px 12px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  vertical-align: top;
+}
+
+.tdRightSub {
+  padding: 1px 0 1px 4px;
+  text-align: right;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.tdTotalLine {
+  padding: 4px 4px 4px 8px;
+  font-size: 10px;
+  border-top: 1px dashed var(--border);
+  font-weight: 500;
+}
+
+.tdRightTotalLine {
+  padding: 4px 0 4px 4px;
+  text-align: right;
+  font-size: 10px;
+  border-top: 1px dashed var(--border);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.totRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+.totTotal {
+  font-weight: 700;
+  font-size: 14px;
+  padding: 6px 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 24px 24px;
+}
+
+.printBtn {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: 6px;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.printBtn:hover {
+  opacity: 0.85;
+}
+
+.closeBtn {
+  flex: 1;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.closeBtn:hover {
+  background: var(--accent);
+}

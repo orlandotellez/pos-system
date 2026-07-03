@@ -1,0 +1,80 @@
+### ========================================
+###           PRODUCTS ENDPOINTS
+### ========================================
+### Base URL: {{apiUrl}}/products
+### Todos requieren authGuard (cookies de sesión).
+### ========================================
+
+### ---------- LIST PRODUCTS ----------
+### Lista productos con filtros opcionales.
+GET {{apiUrl}}/products?page=1&limit=20&search=&active=true
+
+### ---------- LIST PRODUCTS (con filtro por categoría) ----------
+GET {{apiUrl}}/products?category_id={{categoryId}}&page=1&limit=10
+
+### ---------- LIST PRODUCTS (stock bajo) ----------
+GET {{apiUrl}}/products?low_stock=true&page=1&limit=20
+
+### ---------- GET PRODUCT BY ID ----------
+GET {{apiUrl}}/products/{{productId}}
+
+### ---------- GET PRODUCT BY BARCODE ----------
+GET {{apiUrl}}/products/barcode/{{barcode}}
+
+### ---------- CREATE PRODUCT ----------
+### Crea un nuevo producto.
+POST {{apiUrl}}/products
+Content-Type: application/json
+
+{
+  "barcode": "7501234567890",
+  "name": "Coca-Cola 600ml",
+  "unit_type": "pieza",
+  "unit_quantity": 1,
+  "category_id": "{{categoryId}}",
+  "price": 25.00,
+  "cost": 18.00,
+  "tax_rate": 16.00,
+  "stock": 100,
+  "low_stock_threshold": 10,
+  "active": true
+}
+
+### ---------- CREATE PRODUCT (sin código de barras) ----------
+POST {{apiUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Tortas de Harina 100g",
+  "price": 15.50,
+  "cost": 10.00,
+  "tax_rate": 16.00,
+  "stock": 50,
+  "low_stock_threshold": 5,
+  "active": true
+}
+
+### ---------- UPDATE PRODUCT ----------
+### Actualiza campos específicos de un producto.
+PUT {{apiUrl}}/products/{{productId}}
+Content-Type: application/json
+
+{
+  "price": 28.00,
+  "stock": 120,
+  "active": true
+}
+
+### ---------- DELETE PRODUCT ----------
+### Elimina un producto (borrado suave si el repo lo soporta).
+DELETE {{apiUrl}}/products/{{productId}}
+
+
+### ========================================
+###          CATEGORIES ENDPOINTS
+### ========================================
+### Único endpoint público (sin authGuard).
+### ========================================
+
+### ---------- LIST CATEGORIES ----------
+GET {{apiUrl}}/categories
