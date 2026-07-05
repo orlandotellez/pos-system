@@ -1,5 +1,14 @@
 # POS System
 
+![React](https://img.shields.io/badge/react-%2320232A.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![Tauri](https://img.shields.io/badge/tauri-%23000000.svg?style=for-the-badge&logo=tauri&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-%233178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/node.js-%23339933.svg?style=for-the-badge&logo=node.js&logoColor=white)
+![Fastify](https://img.shields.io/badge/fastify-%23000000.svg?style=for-the-badge&logo=fastify&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)
+![Axum](https://img.shields.io/badge/axum-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)
+
 Sistema de Punto de Venta (POS) multiplataforma construido como **monorepo** con tres proyectos coordinados: un frontend común empaquetado con **Tauri** (Web + Desktop + Mobile), un backend **Node.js + Fastify** ya terminado y un backend alternativo **Rust + Axum** actualmente en desarrollo.
 
 El sistema cubre la operación típica de un negocio minorista: gestión de productos, categorías, proveedores, inventario por lotes y movimientos individuales, ventas (con productos y servicios), autenticación de usuarios, configuración del negocio y reportes.
