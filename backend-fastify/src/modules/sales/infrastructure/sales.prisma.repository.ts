@@ -20,7 +20,7 @@ type ServiceProductWithProduct = Prisma.service_productGetPayload<{
 }>
 
 export const SaleRepository: ISaleRepository = {
-  async create(data: CreateSaleData, serviceProductsToDeduct?: { product_id: string; quantity: number }[], customServiceProducts?: Map<string, CreateSaleServiceItemProductData[]>) {
+  async create(data: CreateSaleData, storeId: string, serviceProductsToDeduct?: { product_id: string; quantity: number }[], customServiceProducts?: Map<string, CreateSaleServiceItemProductData[]>) {
     // Use a transaction for atomicity: create sale + deduct inventory
     const sale = await prisma.$transaction(async (tx) => {
       // 1. Create the sale with items
@@ -33,6 +33,7 @@ export const SaleRepository: ISaleRepository = {
           payment_method: data.payment_method,
           amount_received: data.amount_received,
           change_given: data.change_given,
+          store_id: storeId,
           user_id: data.user_id,
           items: {
             create: data.items.map((item) => ({
@@ -132,6 +133,7 @@ export const SaleRepository: ISaleRepository = {
         await tx.inventory_movement.create({
           data: {
             product_id: item.product_id,
+            store_id: storeId,
             movement_type: "venta",
             quantity: item.quantity,
             note: `Venta #${created.id.slice(0, 8)}`,
@@ -151,6 +153,7 @@ export const SaleRepository: ISaleRepository = {
           await tx.inventory_movement.create({
             data: {
               product_id: sp.product_id,
+              store_id: storeId,
               movement_type: "venta",
               quantity: sp.quantity,
               note: `Servicio en venta #${created.id.slice(0, 8)}`,
@@ -177,9 +180,9 @@ export const SaleRepository: ISaleRepository = {
     return mapPrismaSaleToEntity(sale)
   },
 
-  async findById(id: string) {
+  async findById(id: string, storeId: string) {
     const sale = await prisma.sale.findUnique({
-      where: { id },
+      where: { id, store_id: storeId },
       include: {
         items: true,
         service_items: {
@@ -193,6 +196,8 @@ export const SaleRepository: ISaleRepository = {
 
   async findAll(params) {
     const where: SaleWhereInput = {}
+
+    if (params?.storeId) where.store_id = params.storeId
 
     if (params?.startDate || params?.endDate) {
       where.created_at = {
@@ -231,6 +236,8 @@ export const SaleRepository: ISaleRepository = {
 
   async getReport(params) {
     const where: any = {}
+
+    if (params?.storeId) where.store_id = params.storeId
 
     if (params?.startDate || params?.endDate) {
       where.created_at = {}
@@ -306,9 +313,11 @@ export const SaleRepository: ISaleRepository = {
       `SELECT DATE_TRUNC('${trunc}', created_at AT TIME ZONE 'UTC') as date,
               CAST(SUM(total) AS DECIMAL(10,2)) as revenue
        FROM sales
-       WHERE created_at >= $1::timestamptz AND created_at <= $2::timestamptz
+       WHERE store_id = $1::text
+         AND created_at >= $2::timestamptz AND created_at <= $3::timestamptz
        GROUP BY DATE_TRUNC('${trunc}', created_at AT TIME ZONE 'UTC')
        ORDER BY date ASC`,
+      params.storeId,
       params.startDate,
       params.endDate,
     )

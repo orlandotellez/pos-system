@@ -54,14 +54,25 @@ function mapSaleToResponse(sale: RichSale): ISaleResponse {
 }
 
 export const createSaleService = (repository: ISaleRepository) => ({
-  create: async (data: CreateSaleData): Promise<ISaleResponse> => {
-    // Build a unified product quantity map for stock validation
-    // (regular items + service products all go into the same map)
-    const productQtyMap = new Map<string, { name: string; price: number; quantity: number; stock: number }>()
-    let serviceProductsToDeduct: { product_id: string; quantity: number }[] = []
+  create: async (data: CreateSaleData, storeId: string): Promise<ISaleResponse> => {
+    /*
+     * Stock validation is done per-product considering ALL sources:
+     *   regular items + service products (custom and auto-lookup).
+     * This is correct — if a service consumes product X and the user also
+     * added X as a regular item, both quantities must be deducted from stock.
+     *
+     * HOWEVER, serviceProductsToDeduct must ONLY contain products that come
+     * from services (sections 2a/2b), NOT regular items (section 1).
+     * Otherwise the repository would double-deduct regular items.
+     */
+
+    // Map for stock validation ONLY (regular + service combined)
+    const validationMap = new Map<string, { name: string; quantity: number; stock: number }>()
+    // Map for service-originating products (to be deducted by the repository)
+    const serviceProductMap = new Map<string, number>()
     let customServiceProducts: Map<string, { product_id: string; product_name: string; quantity: number; unit_price: number; line_total: number }[]> | undefined
 
-    // 1. Add regular product items to the map
+    // 1. Regular product items — validate stock
     if (data.items && data.items.length > 0) {
       const productIds = data.items.map((i) => i.product_id)
       const dbProducts = await prisma.product.findMany({
@@ -72,14 +83,13 @@ export const createSaleService = (repository: ISaleRepository) => ({
       for (const item of data.items) {
         const dbProd = dbProductMap.get(item.product_id)
         if (!dbProd) throw new NotFoundError(`Product ${item.product_id} not found`)
-        const existing = productQtyMap.get(item.product_id) || {
+        const existing = validationMap.get(item.product_id) || {
           name: dbProd.name,
-          price: Number(dbProd.price),
           quantity: 0,
           stock: dbProd.stock,
         }
         existing.quantity += item.quantity
-        productQtyMap.set(item.product_id, existing)
+        validationMap.set(item.product_id, existing)
       }
     }
 
@@ -107,14 +117,18 @@ export const createSaleService = (repository: ISaleRepository) => ({
             const dbProd = dbProductMap.get(sp.product_id)
             if (!dbProd) throw new NotFoundError(`Product ${sp.product_id} not found`)
 
-            const existing = productQtyMap.get(sp.product_id) || {
+            // Update validation map
+            const existing = validationMap.get(sp.product_id) || {
               name: dbProd.name,
-              price: Number(dbProd.price),
               quantity: 0,
               stock: dbProd.stock,
             }
             existing.quantity += sp.quantity
-            productQtyMap.set(sp.product_id, existing)
+            validationMap.set(sp.product_id, existing)
+
+            // Track service-originating product for deduction
+            serviceProductMap.set(sp.product_id, (serviceProductMap.get(sp.product_id) || 0) + sp.quantity)
+
             sps.push(sp)
           }
           customServiceProducts.set(si.service_id, sps)
@@ -130,31 +144,29 @@ export const createSaleService = (repository: ISaleRepository) => ({
         })
 
         for (const sp of serviceProducts) {
-          const existing = productQtyMap.get(sp.product_id) || {
+          // Update validation map
+          const existing = validationMap.get(sp.product_id) || {
             name: sp.product.name,
-            price: Number(sp.product.price),
             quantity: 0,
             stock: sp.product.stock,
           }
           existing.quantity += sp.quantity
-          productQtyMap.set(sp.product_id, existing)
+          validationMap.set(sp.product_id, existing)
+
+          // Track service-originating product for deduction
+          serviceProductMap.set(sp.product_id, (serviceProductMap.get(sp.product_id) || 0) + sp.quantity)
         }
       }
 
-      if (productQtyMap.size === 0) {
+      if (serviceProductMap.size === 0 && (!data.items || data.items.length === 0)) {
         throw new BadRequestError("No products found for the selected services")
       }
-
-      serviceProductsToDeduct = Array.from(productQtyMap.entries()).map(([product_id, info]) => ({
-        product_id,
-        quantity: info.quantity,
-      }))
     }
 
-    // 3. Unified stock validation across ALL products (regular + service)
-    if (productQtyMap.size > 0) {
+    // 3. Stock validation across ALL products (regular + service)
+    if (validationMap.size > 0) {
       const insufficientStock: string[] = []
-      for (const [prodId, info] of productQtyMap) {
+      for (const [, info] of validationMap) {
         if (info.stock < info.quantity) {
           insufficientStock.push(`${info.name} (disponible: ${info.stock}, requerido: ${info.quantity})`)
         }
@@ -166,19 +178,25 @@ export const createSaleService = (repository: ISaleRepository) => ({
       }
     }
 
-    const sale = await repository.create(data, serviceProductsToDeduct, customServiceProducts)
+    // Build serviceProductsToDeduct from service-originating products ONLY
+    const serviceProductsToDeduct = Array.from(serviceProductMap.entries()).map(([product_id, quantity]) => ({
+      product_id,
+      quantity,
+    }))
+
+    const sale = await repository.create(data, storeId, serviceProductsToDeduct, customServiceProducts)
     return mapSaleToResponse(sale)
   },
 
-  getById: async (id: string): Promise<ISaleResponse> => {
-    const sale = await repository.findById(id)
+  getById: async (id: string, storeId: string): Promise<ISaleResponse> => {
+    const sale = await repository.findById(id, storeId)
     if (!sale) {
       throw new NotFoundError("Sale not found")
     }
     return mapSaleToResponse(sale)
   },
 
-  list: async (params?: { start_date?: string; end_date?: string; user_id?: string; payment_method?: string; page?: number; limit?: number }): Promise<ISaleListResponse> => {
+  list: async (params?: { start_date?: string; end_date?: string; user_id?: string; payment_method?: string; page?: number; limit?: number; storeId?: string }): Promise<ISaleListResponse> => {
     const result = await repository.findAll({
       startDate: params?.start_date ? new Date(params.start_date) : undefined,
       endDate: params?.end_date ? new Date(params.end_date) : undefined,
@@ -186,6 +204,7 @@ export const createSaleService = (repository: ISaleRepository) => ({
       paymentMethod: params?.payment_method,
       page: params?.page,
       limit: params?.limit,
+      storeId: params?.storeId,
     })
 
     return {
@@ -196,10 +215,11 @@ export const createSaleService = (repository: ISaleRepository) => ({
     }
   },
 
-  getReport: async (params?: { start_date?: string; end_date?: string }): Promise<ISaleReport> => {
+  getReport: async (params?: { start_date?: string; end_date?: string; storeId?: string }): Promise<ISaleReport> => {
     const report = await repository.getReport({
       startDate: params?.start_date ? new Date(params.start_date) : undefined,
       endDate: params?.end_date ? new Date(params.end_date) : undefined,
+      storeId: params?.storeId,
     })
 
     return {
@@ -222,6 +242,7 @@ export const createSaleService = (repository: ISaleRepository) => ({
       startDate: new Date(params.start_date),
       endDate: new Date(params.end_date),
       groupBy: params.group_by,
+      storeId: params.store_id,
     })
     return items
   },

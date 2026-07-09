@@ -79,4 +79,5 @@ export interface IRevenueTrendQuery {
   start_date: string
   end_date: string
   group_by: GroupBy
+  store_id: string
 }

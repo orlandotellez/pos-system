@@ -1,10 +1,10 @@
 import type { ISaleEntity, ISaleItemEntity, CreateSaleData, CreateSaleServiceItemProductData } from "./sales.entities"
 
 export interface ISaleRepository {
-  create(data: CreateSaleData, serviceProductsToDeduct?: { product_id: string; quantity: number }[], customServiceProducts?: Map<string, CreateSaleServiceItemProductData[]>): Promise<ISaleEntity>
-  findById(id: string): Promise<ISaleEntity | null>
-  findAll(params?: { startDate?: Date; endDate?: Date; userId?: string; paymentMethod?: string; page?: number; limit?: number }): Promise<{ sales: ISaleEntity[]; total: number }>
-  getReport(params?: { startDate?: Date; endDate?: Date }): Promise<{
+  create(data: CreateSaleData, storeId: string, serviceProductsToDeduct?: { product_id: string; quantity: number }[], customServiceProducts?: Map<string, CreateSaleServiceItemProductData[]>): Promise<ISaleEntity>
+  findById(id: string, storeId: string): Promise<ISaleEntity | null>
+  findAll(params?: { startDate?: Date; endDate?: Date; userId?: string; paymentMethod?: string; page?: number; limit?: number; storeId?: string }): Promise<{ sales: ISaleEntity[]; total: number }>
+  getReport(params?: { startDate?: Date; endDate?: Date; storeId?: string }): Promise<{
     totalSales: number
     totalRevenue: number
     totalTax: number
@@ -14,5 +14,5 @@ export interface ISaleRepository {
     topProducts: { productName: string; quantity: number; revenue: number }[]
   }>
 
-  getRevenueTrend(params: { startDate: Date; endDate: Date; groupBy: "day" | "week" | "month" }): Promise<{ date: string; revenue: number }[]>
+  getRevenueTrend(params: { startDate: Date; endDate: Date; groupBy: "day" | "week" | "month"; storeId: string }): Promise<{ date: string; revenue: number }[]>
 }
