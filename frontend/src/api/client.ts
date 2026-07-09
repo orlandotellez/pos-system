@@ -71,7 +71,20 @@ async function request<T>(
 
   const data = await res.json();
 
-  if (!res.ok) throw new ApiError(res.status, data);
+  if (!res.ok) {
+    // Si el backend dice "Store context required" (403), el JWT no tiene storeId.
+    // Forzamos re-login limpio.
+    if (res.status === 403) {
+      localStorage.removeItem("auth-token");
+      localStorage.removeItem("auth-refresh-token");
+      localStorage.removeItem("auth-user");
+      localStorage.removeItem("auth-store");
+      window.location.href = "/auth";
+      return undefined as T;
+    }
+
+    throw new ApiError(res.status, data);
+  }
 
   return data as T;
 }
