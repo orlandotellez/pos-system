@@ -1,10 +1,13 @@
 import { api } from "./client";
 
-
-
-
-
 export type Role = "admin" | "cajero";
+
+export interface Store {
+  id: string;
+  name: string;
+  address?: string;
+  phone?: string;
+}
 
 export interface AuthUser {
   id: string;
@@ -14,6 +17,7 @@ export interface AuthUser {
   role: Role;
   phone?: string;
   image?: string;
+  store_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -21,6 +25,7 @@ export interface AuthUser {
 export interface AuthResponse {
   message: string;
   user: AuthUser;
+  store: Store;
   accessToken: string;
   refreshToken: string;
 }
@@ -32,6 +37,7 @@ export interface MessageResponse {
 export interface RefreshResponse {
   message: string;
   user: AuthUser;
+  store: Store;
   accessToken: string;
   refreshToken: string;
 }
@@ -40,10 +46,6 @@ export interface ForgotPasswordResponse {
   message: string;
   expires_at: string;
 }
-
-
-
-
 
 export interface RegisterPayload {
   name: string;
@@ -76,9 +78,14 @@ export interface ResetPasswordPayload {
   newPassword: string;
 }
 
-
-
-
+export interface RegisterStorePayload {
+  storeName: string;
+  storeAddress?: string;
+  storePhone?: string;
+  adminName: string;
+  adminEmail: string;
+  adminPassword: string;
+}
 
 export const authApi = {
   register: (data: RegisterPayload) =>
@@ -87,8 +94,8 @@ export const authApi = {
   login: (data: LoginPayload) =>
     api.post<AuthResponse>("/auth/login", data),
 
-  logout: () =>
-    api.post<MessageResponse>("/auth/logout"),
+  logout: (refreshToken?: string) =>
+    api.post<MessageResponse>("/auth/logout", refreshToken ? { refreshToken } : undefined),
 
   refresh: (refreshToken?: string) =>
     api.post<RefreshResponse>("/auth/refresh", refreshToken ? { refreshToken } : undefined),
@@ -105,4 +112,6 @@ export const authApi = {
   resetPassword: (data: ResetPasswordPayload) =>
     api.post<MessageResponse>("/auth/reset-password", data),
 
+  registerStore: (data: RegisterStorePayload) =>
+    api.post<AuthResponse>("/auth/register-store", data),
 };
