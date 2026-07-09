@@ -9,7 +9,7 @@ const userService = createUserService(UserRepository)
 export const usersController = {
   list: async (request: FastifyRequest, reply: FastifyReply) => {
     const query = UserQuerySchema.parse(request.query)
-    const result = await userService.list(query)
+    const result = await userService.list({ ...query, storeId: request.storeId })
     return reply.status(200).send(result)
   },
 
@@ -21,14 +21,14 @@ export const usersController = {
 
   create: async (request: FastifyRequest, reply: FastifyReply) => {
     const data = CreateUserDtoSchema.parse(request.body)
-    const result = await userService.create(data)
+    const result = await userService.create({ ...data, store_id: request.storeId }, request.storeId)
     return reply.status(201).send(result)
   },
 
   update: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
     const data = UpdateUserDtoSchema.parse(request.body)
-    const result = await userService.update(id, data)
+    const result = await userService.update(id, data, request.storeId)
     return reply.status(200).send(result)
   },
 

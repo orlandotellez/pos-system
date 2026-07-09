@@ -8,6 +8,7 @@ export interface IUserEntity {
   role: ROLE
   phone?: string | null
   image?: string | null
+  store_id?: string | null
   created_at: Date
   updated_at: Date
   deleted_at?: Date | null
@@ -19,6 +20,7 @@ export interface CreateUserData {
   password: string
   role?: ROLE
   phone?: string
+  store_id?: string
 }
 
 export interface UpdateUserData {

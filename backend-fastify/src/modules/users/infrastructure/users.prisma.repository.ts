@@ -11,6 +11,7 @@ const userSelect = {
   role: true,
   phone: true,
   image: true,
+  store_id: true,
   created_at: true,
   updated_at: true,
   deleted_at: true,
@@ -27,6 +28,7 @@ function mapToEntity(user: UserRecord): IUserEntity {
     role: user.role,
     phone: user.phone ?? null,
     image: user.image ?? null,
+    store_id: user.store_id ?? null,
     created_at: user.created_at,
     updated_at: user.updated_at,
     deleted_at: user.deleted_at ?? null,
@@ -36,6 +38,10 @@ function mapToEntity(user: UserRecord): IUserEntity {
 export const UserRepository: IUserRepository = {
   async findAll(params) {
     const where: Prisma.userWhereInput = { deleted_at: null }
+
+    if (params?.storeId) {
+      where.store_id = params.storeId
+    }
 
     if (params?.search) {
       where.OR = [
@@ -70,11 +76,12 @@ export const UserRepository: IUserRepository = {
     return user ? mapToEntity(user) : null
   },
 
-  async findByEmail(email: string) {
-    const user = await prisma.user.findFirst({
-      where: { email },
-      select: userSelect,
-    })
+  async findByEmail(email: string, storeId?: string) {
+    const where: Prisma.userWhereInput = { email }
+    if (storeId) {
+      where.store_id = storeId
+    }
+    const user = await prisma.user.findFirst({ where, select: userSelect })
     return user ? mapToEntity(user) : null
   },
 

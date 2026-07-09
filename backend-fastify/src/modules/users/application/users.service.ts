@@ -20,7 +20,7 @@ function mapUserToResponse(user: IUserEntity): IUserResponse {
 }
 
 export const createUserService = (repository: IUserRepository) => ({
-  list: async (params?: { search?: string; page?: number; limit?: number }): Promise<IUserListResponse> => {
+  list: async (params?: { search?: string; page?: number; limit?: number; storeId?: string }): Promise<IUserListResponse> => {
     const result = await repository.findAll(params)
     return {
       users: result.users.map(mapUserToResponse),
@@ -36,8 +36,8 @@ export const createUserService = (repository: IUserRepository) => ({
     return mapUserToResponse(user)
   },
 
-  create: async (data: CreateUserData): Promise<IUserResponse> => {
-    const existing = await repository.findByEmail(data.email)
+  create: async (data: CreateUserData, storeId?: string): Promise<IUserResponse> => {
+    const existing = await repository.findByEmail(data.email, storeId)
     if (existing) throw new ConflictError("A user with this email already exists")
 
     const hashed = await hashPassword(data.password)
@@ -50,12 +50,12 @@ export const createUserService = (repository: IUserRepository) => ({
     return mapUserToResponse(user)
   },
 
-  update: async (id: string, data: UpdateUserData): Promise<IUserResponse> => {
+  update: async (id: string, data: UpdateUserData, storeId?: string): Promise<IUserResponse> => {
     const existing = await repository.findById(id)
     if (!existing) throw new NotFoundError("User not found")
 
     if (data.email && data.email !== existing.email) {
-      const duplicate = await repository.findByEmail(data.email)
+      const duplicate = await repository.findByEmail(data.email, storeId)
       if (duplicate) throw new ConflictError("A user with this email already exists")
     }
 
