@@ -34,7 +34,7 @@ function mapProductToResponse(product: RichProductEntity): IProductResponse {
 }
 
 export const createProductService = (repository: IProductRepository) => ({
-  list: async (params?: { search?: string; category_id?: string; active?: boolean; lowStock?: boolean; outOfStock?: boolean; page?: number; limit?: number }): Promise<IProductListResponse> => {
+  list: async (params?: { search?: string; category_id?: string; active?: boolean; lowStock?: boolean; outOfStock?: boolean; page?: number; limit?: number; storeId?: string }): Promise<IProductListResponse> => {
     const result = await repository.findAll(params)
     return {
       products: result.products.map(mapProductToResponse),
@@ -44,56 +44,56 @@ export const createProductService = (repository: IProductRepository) => ({
     }
   },
 
-  getById: async (id: string): Promise<IProductResponse> => {
-    const product = await repository.findById(id)
+  getById: async (id: string, storeId?: string): Promise<IProductResponse> => {
+    const product = await repository.findById(id, storeId)
     if (!product || product.deleted_at) {
       throw new NotFoundError("Product not found")
     }
     return mapProductToResponse(product)
   },
 
-  getByBarcode: async (barcode: string): Promise<IProductResponse | null> => {
-    const product = await repository.findByBarcode(barcode)
+  getByBarcode: async (barcode: string, storeId?: string): Promise<IProductResponse | null> => {
+    const product = await repository.findByBarcode(barcode, storeId)
     if (!product || product.deleted_at) {
       return null
     }
     return mapProductToResponse(product)
   },
 
-  create: async (data: CreateProductData): Promise<IProductResponse> => {
+  create: async (data: CreateProductData, storeId?: string): Promise<IProductResponse> => {
     if (data.barcode) {
-      const existing = await repository.findByBarcode(data.barcode)
+      const existing = await repository.findByBarcode(data.barcode, storeId)
       if (existing) {
         throw new ConflictError("A product with this barcode already exists")
       }
     }
 
-    const product = await repository.create(data)
+    const product = await repository.create(data, storeId)
     return mapProductToResponse(product)
   },
 
-  update: async (id: string, data: UpdateProductData): Promise<IProductResponse> => {
-    const existing = await repository.findById(id)
+  update: async (id: string, data: UpdateProductData, storeId?: string): Promise<IProductResponse> => {
+    const existing = await repository.findById(id, storeId)
     if (!existing || existing.deleted_at) {
       throw new NotFoundError("Product not found")
     }
 
     if (data.barcode && data.barcode !== existing.barcode) {
-      const duplicate = await repository.findByBarcode(data.barcode)
+      const duplicate = await repository.findByBarcode(data.barcode, storeId)
       if (duplicate && duplicate.id !== id) {
         throw new ConflictError("A product with this barcode already exists")
       }
     }
 
-    const product = await repository.update(id, data)
+    const product = await repository.update(id, data, storeId)
     return mapProductToResponse(product)
   },
 
-  delete: async (id: string): Promise<void> => {
-    const existing = await repository.findById(id)
+  delete: async (id: string, storeId?: string): Promise<void> => {
+    const existing = await repository.findById(id, storeId)
     if (!existing || existing.deleted_at) {
       throw new NotFoundError("Product not found")
     }
-    await repository.softDelete(id)
+    await repository.softDelete(id, storeId)
   }
 })

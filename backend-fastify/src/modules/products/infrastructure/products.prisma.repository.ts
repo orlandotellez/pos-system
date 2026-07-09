@@ -64,6 +64,10 @@ export const ProductRepository: IProductRepository = {
       deleted_at: null,
     }
 
+    if (params?.storeId) {
+      where.store_id = params.storeId
+    }
+
     if (params?.search) {
       where.OR = [
         { name: { contains: params.search, mode: "insensitive" } },
@@ -111,25 +115,25 @@ export const ProductRepository: IProductRepository = {
     }
   },
 
-  async findById(id: string) {
+  async findById(id: string, storeId?: string) {
     const product = await prisma.product.findFirst({
-      where: { id, deleted_at: null },
+      where: { id, deleted_at: null, ...(storeId ? { store_id: storeId } : {}) },
       select: productSelect,
     })
     if (!product) return null
     return mapToEntity(product)
   },
 
-  async findByBarcode(barcode: string) {
+  async findByBarcode(barcode: string, storeId?: string) {
     const product = await prisma.product.findFirst({
-      where: { barcode, deleted_at: null },
+      where: { barcode, deleted_at: null, ...(storeId ? { store_id: storeId } : {}) },
       select: productSelect,
     })
     if (!product) return null
     return mapToEntity(product)
   },
 
-  async create(data: CreateProductData) {
+  async create(data: CreateProductData, storeId?: string) {
     const product = await prisma.product.create({
       data: {
         barcode: data.barcode,
@@ -138,6 +142,7 @@ export const ProductRepository: IProductRepository = {
         unit_quantity: data.unit_quantity,
         category_id: data.category_id,
         supplier_id: data.supplier_id,
+        store_id: storeId ?? "",
         price: data.price,
         cost: data.cost ?? 0,
         tax_rate: data.tax_rate ?? 0,
@@ -150,9 +155,9 @@ export const ProductRepository: IProductRepository = {
     return mapToEntity(product)
   },
 
-  async update(id: string, data: UpdateProductData) {
+  async update(id: string, data: UpdateProductData, storeId?: string) {
     const product = await prisma.product.update({
-      where: { id },
+      where: { id, ...(storeId ? { store_id: storeId } : {}) },
       data: {
         ...(data.barcode !== undefined && { barcode: data.barcode }),
         ...(data.name !== undefined && { name: data.name }),
@@ -172,16 +177,16 @@ export const ProductRepository: IProductRepository = {
     return mapToEntity(product)
   },
 
-  async softDelete(id: string) {
+  async softDelete(id: string, storeId?: string) {
     await prisma.product.update({
-      where: { id },
+      where: { id, ...(storeId ? { store_id: storeId } : {}) },
       data: { deleted_at: new Date() },
     })
   },
 
-  async updateStock(id: string, quantity: number) {
+  async updateStock(id: string, quantity: number, storeId?: string) {
     const product = await prisma.product.update({
-      where: { id },
+      where: { id, ...(storeId ? { store_id: storeId } : {}) },
       data: { stock: { increment: quantity } },
       select: productSelect,
     })

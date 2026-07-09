@@ -18,19 +18,20 @@ export const productsController = {
       outOfStock: query.out_of_stock,
       page: query.page,
       limit: query.limit,
+      storeId: request.storeId,
     })
     return reply.status(200).send(result)
   },
 
   getById: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
-    const result = await productService.getById(id)
+    const result = await productService.getById(id, request.storeId)
     return reply.status(200).send(result)
   },
 
   getByBarcode: async (request: FastifyRequest, reply: FastifyReply) => {
     const { barcode } = request.params as { barcode: string }
-    const result = await productService.getByBarcode(barcode)
+    const result = await productService.getByBarcode(barcode, request.storeId)
     if (!result) {
       return reply.status(404).send({ message: "Product not found" })
     }
@@ -39,20 +40,20 @@ export const productsController = {
 
   create: async (request: FastifyRequest, reply: FastifyReply) => {
     const data = CreateProductDtoSchema.parse(request.body)
-    const result = await productService.create(data)
+    const result = await productService.create(data, request.storeId)
     return reply.status(201).send(result)
   },
 
   update: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
     const data = UpdateProductDtoSchema.parse(request.body)
-    const result = await productService.update(id, data as UpdateProductData)
+    const result = await productService.update(id, data as UpdateProductData, request.storeId)
     return reply.status(200).send(result)
   },
 
   delete: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
-    await productService.delete(id)
+    await productService.delete(id, request.storeId)
     return reply.status(200).send({ message: "Product deleted successfully" })
   },
 }
