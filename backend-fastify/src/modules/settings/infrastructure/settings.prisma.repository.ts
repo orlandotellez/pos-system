@@ -17,14 +17,18 @@ function mapToEntity(settings: settings): ISettingsEntity {
 }
 
 export const SettingsRepository: ISettingsRepository = {
-  async get() {
-    const settings = await prisma.settings.findFirst()
+  async get(storeId: string) {
+    const settings = await prisma.settings.findUnique({
+      where: { store_id: storeId },
+    })
     if (!settings) return null
     return mapToEntity(settings)
   },
 
-  async upsert(data: UpdateSettingsData) {
-    const existing = await prisma.settings.findFirst()
+  async upsert(data: UpdateSettingsData, storeId: string) {
+    const existing = await prisma.settings.findUnique({
+      where: { store_id: storeId },
+    })
 
     if (existing) {
       const updated = await prisma.settings.update({
@@ -43,6 +47,7 @@ export const SettingsRepository: ISettingsRepository = {
 
     const created = await prisma.settings.create({
       data: {
+        store_id: storeId,
         name: data.name ?? "Mi Negocio",
         address: data.address,
         phone: data.phone,

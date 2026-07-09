@@ -15,8 +15,8 @@ function mapSettingsToResponse(settings: ISettingsEntity): ISettingsResponse {
 }
 
 export const createSettingsService = (repository: ISettingsRepository) => ({
-  get: async (): Promise<ISettingsResponse> => {
-    const settings = await repository.get()
+  get: async (storeId: string): Promise<ISettingsResponse> => {
+    const settings = await repository.get(storeId)
     if (!settings) {
       return {
         name: "",
@@ -28,8 +28,8 @@ export const createSettingsService = (repository: ISettingsRepository) => ({
     return mapSettingsToResponse(settings)
   },
 
-  update: async (data: UpdateSettingsData): Promise<ISettingsResponse> => {
-    const settings = await repository.upsert(data)
+  update: async (data: UpdateSettingsData, storeId: string): Promise<ISettingsResponse> => {
+    const settings = await repository.upsert(data, storeId)
     return mapSettingsToResponse(settings)
   },
 })
