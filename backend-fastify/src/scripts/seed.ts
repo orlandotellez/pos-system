@@ -1,29 +1,31 @@
-import { prisma } from "@/config/prisma.js";
-import { hashPassword } from "@/core/utils/crypto.utils";
+import { prisma } from "@/config/prisma.js"
+import { hashPassword } from "@/core/utils/crypto.utils"
 
-type CategoryMap = Record<string, string>;
-type SupplierMap = Record<string, string>;
+type CategoryMap = Record<string, string>
+type SupplierMap = Record<string, string>
 
 type ServiceSeed = {
-  name: string;
-  description: string;
-  base_price: number;
-  products: { productName: string; quantity: number }[];
-};
+  name: string
+  description: string
+  base_price: number
+  products: { productName: string; quantity: number }[]
+}
 
 type ProductSeed = {
-  name: string;
-  unit_type: "unidad" | "paquete" | "caja" | "bolsa" | "botella" | "lata" | "sobre" | "barra" | "rollo" | "galon" | "ristra";
-  unit_quantity?: number;
-  category_name: string;
-  supplier_name: string;
-  cost: number;
-  price: number;
-  stock: number;
-  low_stock_threshold: number;
-  tax_rate: number;
-  barcode?: string;
-};
+  name: string
+  unit_type: "unidad" | "paquete" | "caja" | "bolsa" | "botella" | "lata" | "sobre" | "barra" | "rollo" | "galon" | "ristra"
+  unit_quantity?: number
+  category_name: string
+  supplier_name: string
+  cost: number
+  price: number
+  stock: number
+  low_stock_threshold: number
+  tax_rate: number
+  barcode?: string
+}
+
+const STORE_NAME = "Smart Miscelánea"
 
 const categories = [
   { name: "Snacks y Chiverías", description: "Papas, churritos, cacahuates y botanas" },
@@ -32,7 +34,7 @@ const categories = [
   { name: "Abarrotes", description: "Café, leche, aceite, sopas y salsas" },
   { name: "Lácteos y Fríos", description: "Leche, yogurt, crema y embutidos" },
   { name: "Higiene y Limpieza", description: "Papel higiénico, jabón, detergente y cuidado personal" },
-];
+]
 
 const suppliers = [
   { name: "Diana Nicaragua", contact_name: "Ejecutivo de Ventas", email: "ventas@diana.com", phone: "0000-0000", address: "Managua, Nicaragua", notes: "Snacks, chiverías y productos Diana" },
@@ -45,7 +47,7 @@ const suppliers = [
   { name: "Mayoreo El Gallo Más Gallo", contact_name: "Ventas", email: "ventas@gallomasgallo.com", phone: "0000-0000", address: "Managua, Nicaragua", notes: "Distribución y abastecimiento" },
   { name: "Kimberly-Clark Nicaragua", contact_name: "Ejecutivo Comercial", email: "ventas@kimberly-clark.com", phone: "0000-0000", address: "Managua, Nicaragua", notes: "Papel higiénico, servilletas y productos de higiene" },
   { name: "Unilever Nicaragua", contact_name: "Ejecutivo Comercial", email: "ventas@unilever.com", phone: "0000-0000", address: "Managua, Nicaragua", notes: "Detergentes, jabones y productos de limpieza" },
-];
+]
 
 const products: ProductSeed[] = [
   { name: "Ranchitas Originales", unit_type: "ristra", unit_quantity: 12, category_name: "Snacks y Chiverías", supplier_name: "Diana Nicaragua", cost: 55, price: 70, stock: 50, low_stock_threshold: 10, tax_rate: 0 },
@@ -125,56 +127,72 @@ const products: ProductSeed[] = [
   { name: "Detergente Surf 250g", unit_type: "bolsa", category_name: "Higiene y Limpieza", supplier_name: "Unilever Nicaragua", cost: 35, price: 45, stock: 50, low_stock_threshold: 12, tax_rate: 0 },
   { name: "Desodorante Axe", unit_type: "unidad", category_name: "Higiene y Limpieza", supplier_name: "Unilever Nicaragua", cost: 65, price: 82, stock: 24, low_stock_threshold: 6, tax_rate: 0 },
   { name: "Shampoo Dove 400ml", unit_type: "botella", category_name: "Higiene y Limpieza", supplier_name: "Unilever Nicaragua", cost: 85, price: 105, stock: 24, low_stock_threshold: 6, tax_rate: 0 },
-];
+]
 
 const services: ServiceSeed[] = [
   { name: "Cambio de Aceite", description: "Cambio completo de aceite de motor", base_price: 50, products: [{ productName: "Aceite Tip Top 1L", quantity: 4 }, { productName: "Arroz Gold 2lb", quantity: 1 }] },
   { name: "Limpieza de Equipo", description: "Limpieza profesional de equipos electrónicos", base_price: 35, products: [{ productName: "Papel Higiénico Scott 4 rollos", quantity: 1 }, { productName: "Detergente Rinso 250g", quantity: 1 }] },
   { name: "Paquete de Mantenimiento", description: "Servicio completo de mantenimiento preventivo", base_price: 75, products: [{ productName: "Aceite Tip Top 1L", quantity: 2 }, { productName: "Detergente Surf 250g", quantity: 1 }] },
-];
+]
 
 const seed = async () => {
-  console.log("🌱 Iniciando seeder de POS...");
+  console.log("🌱 Iniciando seeder de POS...")
 
-  await prisma.sale_service_product.deleteMany({});
-  await prisma.sale_service.deleteMany({});
-  await prisma.service_product.deleteMany({});
-  await prisma.service.deleteMany({});
-  await prisma.inventory_batch_item.deleteMany({});
-  await prisma.inventory_batch.deleteMany({});
-  await prisma.inventory_movement.deleteMany({});
-  await prisma.sale_item.deleteMany({});
-  await prisma.sale.deleteMany({});
-  await prisma.session.deleteMany({});
-  await prisma.account.deleteMany({});
-  await prisma.user.deleteMany({});
-  await prisma.verification.deleteMany({});
-  await prisma.product.deleteMany({});
-  await prisma.category.deleteMany({});
-  await prisma.supplier.deleteMany({});
+  await prisma.sale_service_product.deleteMany({})
+  await prisma.sale_service.deleteMany({})
+  await prisma.service_product.deleteMany({})
+  await prisma.service.deleteMany({})
+  await prisma.inventory_batch_item.deleteMany({})
+  await prisma.inventory_batch.deleteMany({})
+  await prisma.inventory_movement.deleteMany({})
+  await prisma.sale_item.deleteMany({})
+  await prisma.sale.deleteMany({})
+  await prisma.session.deleteMany({})
+  await prisma.account.deleteMany({})
+  await prisma.user.deleteMany({})
+  await prisma.verification.deleteMany({})
+  await prisma.product.deleteMany({})
+  await prisma.category.deleteMany({})
+  await prisma.supplier.deleteMany({})
+  await prisma.settings.deleteMany({})
+  await prisma.store.deleteMany({})
 
-  const catMap: CategoryMap = {};
-  const supMap: SupplierMap = {};
+  // ─── Create store ───
+  console.log(`🏪 Creando tienda "${STORE_NAME}"...`)
+  const store = await prisma.store.create({
+    data: {
+      name: STORE_NAME,
+      address: "",
+      phone: "",
+    },
+  })
+  console.log(`   ✅ Tienda creada: ${store.id}`)
 
-  console.log(`📂 Sembrando ${categories.length} categorías...`);
+  // ─── Seed categories ───
+  const catMap: CategoryMap = {}
+  const supMap: SupplierMap = {}
+
+  console.log(`📂 Sembrando ${categories.length} categorías...`)
   for (const cat of categories) {
     const created = await prisma.category.create({
-      data: { name: cat.name, description: cat.description },
-    });
-    catMap[cat.name] = created.id;
+      data: { name: cat.name, description: cat.description, store_id: store.id },
+    })
+    catMap[cat.name] = created.id
   }
-  console.log(`   ✅ ${categories.length} categorías`);
+  console.log(`   ✅ ${categories.length} categorías`)
 
-  console.log(`🏢 Sembrando ${suppliers.length} proveedores...`);
+  // ─── Seed suppliers ───
+  console.log(`🏢 Sembrando ${suppliers.length} proveedores...`)
   for (const sup of suppliers) {
     const created = await prisma.supplier.create({
-      data: sup,
-    });
-    supMap[sup.name] = created.id;
+      data: { ...sup, store_id: store.id },
+    })
+    supMap[sup.name] = created.id
   }
-  console.log(`   ✅ ${suppliers.length} proveedores`);
+  console.log(`   ✅ ${suppliers.length} proveedores`)
 
-  console.log(`📦 Sembrando ${products.length} productos...`);
+  // ─── Seed products ───
+  console.log(`📦 Sembrando ${products.length} productos...`)
   for (const p of products) {
     await prisma.product.create({
       data: {
@@ -189,12 +207,14 @@ const seed = async () => {
         low_stock_threshold: p.low_stock_threshold,
         tax_rate: p.tax_rate,
         active: true,
+        store_id: store.id,
       },
-    });
+    })
   }
-  console.log(`   ✅ ${products.length} productos`);
+  console.log(`   ✅ ${products.length} productos`)
 
-  console.log(`🔧 Sembrando ${services.length} servicios...`);
+  // ─── Seed services ───
+  console.log(`🔧 Sembrando ${services.length} servicios...`)
   for (const svc of services) {
     const created = await prisma.service.create({
       data: {
@@ -202,32 +222,45 @@ const seed = async () => {
         description: svc.description,
         base_price: svc.base_price,
         is_active: true,
+        store_id: store.id,
       },
-    });
+    })
 
     for (const sp of svc.products) {
       const product = await prisma.product.findFirst({
-        where: { name: { contains: sp.productName, mode: "insensitive" }, deleted_at: null },
-      });
+        where: { name: { contains: sp.productName, mode: "insensitive" }, store_id: store.id, deleted_at: null },
+      })
       if (product) {
         await prisma.service_product.create({
           data: {
-            service_id: created.id,
-            product_id: product.id,
-            quantity: sp.quantity,
+          service_id: created.id,
+          product_id: product.id,
+          quantity: sp.quantity,
           },
-        });
+        })
       }
     }
   }
-  console.log(`   ✅ ${services.length} servicios`);
+  console.log(`   ✅ ${services.length} servicios`)
 
+  // ─── Create default settings ───
+  await prisma.settings.create({
+    data: {
+      store_id: store.id,
+      name: STORE_NAME,
+      tax_rate: 16,
+      low_stock_threshold: 5,
+    },
+  })
+  console.log(`   ✅ Configuración por defecto creada`)
+
+  // ─── Seed users ───
   const testUsers = [
     { name: "Admin", email: "admin@smart-miscelanea.com", password: "admin123", role: "admin" as const },
     { name: "Cajero", email: "cajero@smart-miscelanea.com", password: "cajero123", role: "cajero" as const },
-  ];
+  ]
 
-  console.log(`👤 Sembrando ${testUsers.length} usuarios de prueba...`);
+  console.log(`👤 Sembrando ${testUsers.length} usuarios de prueba...`)
   for (const u of testUsers) {
     const user = await prisma.user.create({
       data: {
@@ -235,10 +268,11 @@ const seed = async () => {
         email: u.email,
         role: u.role,
         email_verified: true,
+        store_id: store.id,
       },
-    });
+    })
 
-    const hashedPassword = await hashPassword(u.password);
+    const hashedPassword = await hashPassword(u.password)
     await prisma.account.create({
       data: {
         account_id: user.id,
@@ -246,59 +280,60 @@ const seed = async () => {
         user_id: user.id,
         password: hashedPassword,
       },
-    });
-    console.log(`   ✅ ${u.email} (${u.role})`);
+    })
+    console.log(`   ✅ ${u.email} (${u.role})`)
   }
 
-  console.log("");
-  console.log("═══════════════════════════════════════");
-  console.log("        RESUMEN DE DATOS SEMBRADOS");
-  console.log("═══════════════════════════════════════");
-  console.log(`   📂 ${categories.length} categorías`);
-  console.log(`   🏢 ${suppliers.length} proveedores`);
-  console.log(`   📦 ${products.length} productos`);
-  console.log(`   🔧 ${services.length} servicios`);
-  console.log(`   👤 ${testUsers.length} usuarios`);
-  console.log("───────────────────────────────────────");
+  console.log("")
+  console.log("═══════════════════════════════════════")
+  console.log("        RESUMEN DE DATOS SEMBRADOS")
+  console.log("═══════════════════════════════════════")
+  console.log(`   🏪 ${store.name}`)
+  console.log(`   📂 ${categories.length} categorías`)
+  console.log(`   🏢 ${suppliers.length} proveedores`)
+  console.log(`   📦 ${products.length} productos`)
+  console.log(`   🔧 ${services.length} servicios`)
+  console.log(`   👤 ${testUsers.length} usuarios`)
+  console.log("───────────────────────────────────────")
 
   const prodCounts = await prisma.product.groupBy({
     by: ["category_id"],
     _count: { id: true },
-    where: { deleted_at: null },
-  });
+    where: { store_id: store.id, deleted_at: null },
+  })
 
-  console.log("   📦 Productos por categoría:");
+  console.log("   📦 Productos por categoría:")
   for (const c of prodCounts) {
-    const cat = await prisma.category.findUnique({ where: { id: c.category_id! } });
-    if (cat) console.log(`      • ${cat.name}: ${c._count.id} productos`);
+    const cat = await prisma.category.findFirst({ where: { id: c.category_id!, store_id: store.id } })
+    if (cat) console.log(`      • ${cat.name}: ${c._count.id} productos`)
   }
 
-  console.log("   🏢 Productos por proveedor:");
+  console.log("   🏢 Productos por proveedor:")
   for (const s of suppliers) {
-    const supplierRecord = await prisma.supplier.findFirst({ where: { name: s.name } });
+    const supplierRecord = await prisma.supplier.findFirst({ where: { name: s.name, store_id: store.id } })
     if (supplierRecord) {
       const productCount = await prisma.product.count({
-        where: { supplier_id: supplierRecord.id, deleted_at: null },
-      });
-      console.log(`      • ${s.name}: ${productCount} productos`);
+        where: { supplier_id: supplierRecord.id, store_id: store.id, deleted_at: null },
+      })
+      console.log(`      • ${s.name}: ${productCount} productos`)
     }
   }
 
-  console.log("═══════════════════════════════════════");
-  console.log("");
-  console.log("🔐 Usuarios de prueba:");
+  console.log("═══════════════════════════════════════")
+  console.log("")
+  console.log("🔐 Usuarios de prueba:")
   for (const u of testUsers) {
-    console.log(`   • ${u.email} / ${u.password} (${u.role})`);
+    console.log(`   • ${u.email} / ${u.password} (${u.role})`)
   }
-  console.log("");
-  console.log("🎉 Seeder completado exitosamente!");
-};
+  console.log("")
+  console.log("🎉 Seeder completado exitosamente!")
+}
 
 seed()
   .catch((e) => {
-    console.error("❌ Seeder falló:", e);
-    process.exit(1);
+    console.error("❌ Seeder falló:", e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })
