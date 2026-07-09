@@ -7,6 +7,8 @@ declare module "fastify" {
   interface FastifyRequest {
     userId?: string
     userRole?: Role
+    storeId?: string
+    storeName?: string
   }
 }
 
@@ -17,7 +19,7 @@ export const authGuard = async (
   const fromCookies = getUserIdFromCookies(request)
   const fromBearer = getUserIdFromBearerToken(request)
 
-  const { userId, role } = fromCookies.userId ? fromCookies : fromBearer
+  const { userId, role, storeId, storeName } = fromCookies.userId ? fromCookies : fromBearer
 
   if (!userId) {
     throw new UnauthorizedError("Authentication required")
@@ -25,6 +27,8 @@ export const authGuard = async (
 
   request.userId = userId
   request.userRole = role ?? undefined
+  request.storeId = storeId ?? undefined
+  request.storeName = storeName ?? undefined
 }
 
 export const adminGuard = async (
