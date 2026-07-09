@@ -13,19 +13,19 @@ export const batchInventoryController = {
     if (!userId) throw new UnauthorizedError("Authentication required")
 
     const data = CreateBatchDtoSchema.parse(request.body)
-    const result = await batchInventoryService.create({ ...data, user_id: userId })
+    const result = await batchInventoryService.create({ ...data, user_id: userId, store_id: request.storeId })
     return reply.status(201).send(result)
   },
 
   getById: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
-    const result = await batchInventoryService.getById(id)
+    const result = await batchInventoryService.getById(id, request.storeId)
     return reply.status(200).send(result)
   },
 
   list: async (request: FastifyRequest, reply: FastifyReply) => {
     const query = BatchQuerySchema.parse(request.query)
-    const result = await batchInventoryService.list(query)
+    const result = await batchInventoryService.list({ ...query, storeId: request.storeId })
     return reply.status(200).send(result)
   },
 }

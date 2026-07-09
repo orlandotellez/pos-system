@@ -14,6 +14,7 @@ export interface IBatchEntity {
   supplier_id?: string | null
   notes?: string | null
   user_id: string
+  store_id?: string
   created_at: Date
   items?: IBatchItemEntity[]
 }
@@ -30,5 +31,6 @@ export type CreateBatchData = {
   supplier_id?: string | null
   notes?: string | null
   user_id: string
+  store_id?: string
   items: CreateBatchItemData[]
 }

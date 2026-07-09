@@ -42,6 +42,7 @@ export const BatchInventoryRepository: IBatchInventoryRepository = {
         supplier_id: data.supplier_id,
         notes: data.notes,
         user_id: data.user_id,
+        store_id: data.store_id!,
         items: {
           create: data.items.map((item: CreateBatchItemData) => ({
             product_id: item.product_id,
@@ -62,9 +63,11 @@ export const BatchInventoryRepository: IBatchInventoryRepository = {
     return mapToEntity(batch as unknown as BatchRecord)
   },
 
-  async findById(id: string) {
-    const batch = await prisma.inventory_batch.findUnique({
-      where: { id },
+  async findById(id: string, storeId?: string) {
+    const where: { id: string; store_id?: string } = { id }
+    if (storeId) where.store_id = storeId
+    const batch = await prisma.inventory_batch.findFirst({
+      where,
       include: {
         items: {
           include: { product: { select: { name: true } } },
@@ -78,9 +81,10 @@ export const BatchInventoryRepository: IBatchInventoryRepository = {
   },
 
   async findAll(params) {
-    const where: { movement_type?: string; supplier_id?: string } = {}
+    const where: { movement_type?: string; supplier_id?: string; store_id?: string } = {}
     if (params?.movement_type) where.movement_type = params.movement_type
     if (params?.supplier_id) where.supplier_id = params.supplier_id
+    if (params?.storeId) where.store_id = params.storeId
 
     const page = params?.page || 1
     const limit = params?.limit || 50
