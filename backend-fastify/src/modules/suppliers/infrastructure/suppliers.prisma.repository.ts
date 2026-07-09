@@ -39,6 +39,7 @@ export const SupplierRepository: ISupplierRepository = {
   async findAll(params) {
     const where: Prisma.supplierWhereInput = {
       deleted_at: null,
+      ...(params?.storeId && { store_id: params.storeId }),
     }
 
     if (params?.search) {
@@ -76,9 +77,9 @@ export const SupplierRepository: ISupplierRepository = {
     }
   },
 
-  async findById(id: string) {
+  async findById(id: string, storeId?: string) {
     const result = await prisma.supplier.findFirst({
-      where: { id, deleted_at: null },
+      where: { id, deleted_at: null, ...(storeId && { store_id: storeId }) },
       select: {
         ...supplierSelect,
         _count: { select: { products: true } },
@@ -88,10 +89,10 @@ export const SupplierRepository: ISupplierRepository = {
     return { ...mapToEntity(result), _count: result._count } as ISupplierEntity
   },
 
-  async create(data: CreateSupplierData) {
+  async create(data: CreateSupplierData, storeId?: string) {
     const supplier = await prisma.supplier.create({
       data: {
-        name: data.name,
+        ...(storeId && { store_id: storeId }),
         contact_name: data.contact_name,
         email: data.email,
         phone: data.phone,
@@ -104,9 +105,10 @@ export const SupplierRepository: ISupplierRepository = {
     return mapToEntity(supplier)
   },
 
-  async update(id: string, data: UpdateSupplierData) {
+  async update(id: string, data: UpdateSupplierData, storeId?: string) {
+    const where = { id, ...(storeId && { store_id: storeId }) } as Prisma.supplierWhereUniqueInput & { store_id?: string }
     const supplier = await prisma.supplier.update({
-      where: { id },
+      where,
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.contact_name !== undefined && { contact_name: data.contact_name }),
@@ -121,9 +123,10 @@ export const SupplierRepository: ISupplierRepository = {
     return mapToEntity(supplier)
   },
 
-  async softDelete(id: string) {
+  async softDelete(id: string, storeId?: string) {
+    const where = { id, ...(storeId && { store_id: storeId }) } as Prisma.supplierWhereUniqueInput & { store_id?: string }
     await prisma.supplier.update({
-      where: { id },
+      where,
       data: { deleted_at: new Date() },
     })
   },

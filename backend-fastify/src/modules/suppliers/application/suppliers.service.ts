@@ -35,7 +35,7 @@ function mapSupplierToResponse(supplier: RichSupplier): ISupplierResponse {
 }
 
 export const createSupplierService = (repository: ISupplierRepository) => ({
-  list: async (params?: { search?: string; is_active?: boolean; page?: number; limit?: number }): Promise<ISupplierListResponse> => {
+  list: async (params?: { search?: string; is_active?: boolean; page?: number; limit?: number; storeId?: string }): Promise<ISupplierListResponse> => {
     const result = await repository.findAll(params)
     return {
       suppliers: result.suppliers.map(mapSupplierToResponse),
@@ -45,38 +45,38 @@ export const createSupplierService = (repository: ISupplierRepository) => ({
     }
   },
 
-  getById: async (id: string): Promise<ISupplierResponse> => {
-    const supplier = await repository.findById(id)
+  getById: async (id: string, storeId?: string): Promise<ISupplierResponse> => {
+    const supplier = await repository.findById(id, storeId)
     if (!supplier || supplier.deleted_at) {
       throw new NotFoundError("Supplier not found")
     }
     return mapSupplierToResponse(supplier)
   },
 
-  create: async (data: CreateSupplierData): Promise<ISupplierResponse> => {
+  create: async (data: CreateSupplierData, storeId?: string): Promise<ISupplierResponse> => {
     if (!data.name || data.name.trim() === "") {
       throw new BadRequestError("Name is required")
     }
 
-    const supplier = await repository.create(data)
+    const supplier = await repository.create(data, storeId)
     return mapSupplierToResponse(supplier)
   },
 
-  update: async (id: string, data: UpdateSupplierData): Promise<ISupplierResponse> => {
-    const existing = await repository.findById(id)
+  update: async (id: string, data: UpdateSupplierData, storeId?: string): Promise<ISupplierResponse> => {
+    const existing = await repository.findById(id, storeId)
     if (!existing || existing.deleted_at) {
       throw new NotFoundError("Supplier not found")
     }
 
-    const supplier = await repository.update(id, data)
+    const supplier = await repository.update(id, data, storeId)
     return mapSupplierToResponse(supplier)
   },
 
-  delete: async (id: string): Promise<void> => {
-    const existing = await repository.findById(id)
+  delete: async (id: string, storeId?: string): Promise<void> => {
+    const existing = await repository.findById(id, storeId)
     if (!existing || existing.deleted_at) {
       throw new NotFoundError("Supplier not found")
     }
-    await repository.softDelete(id)
+    await repository.softDelete(id, storeId)
   }
 })

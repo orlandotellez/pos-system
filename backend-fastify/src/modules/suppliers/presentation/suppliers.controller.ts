@@ -9,32 +9,32 @@ const supplierService = createSupplierService(SupplierRepository)
 export const suppliersController = {
   list: async (request: FastifyRequest, reply: FastifyReply) => {
     const query = SupplierQuerySchema.parse(request.query)
-    const result = await supplierService.list(query)
+    const result = await supplierService.list({ ...query, storeId: request.storeId })
     return reply.status(200).send(result)
   },
 
   getById: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
-    const result = await supplierService.getById(id)
+    const result = await supplierService.getById(id, request.storeId)
     return reply.status(200).send(result)
   },
 
   create: async (request: FastifyRequest, reply: FastifyReply) => {
     const data = CreateSupplierDtoSchema.parse(request.body)
-    const result = await supplierService.create(data)
+    const result = await supplierService.create(data, request.storeId)
     return reply.status(201).send(result)
   },
 
   update: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
     const data = UpdateSupplierDtoSchema.parse(request.body)
-    const result = await supplierService.update(id, data as UpdateSupplierData)
+    const result = await supplierService.update(id, data as UpdateSupplierData, request.storeId)
     return reply.status(200).send(result)
   },
 
   delete: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
-    await supplierService.delete(id)
+    await supplierService.delete(id, request.storeId)
     return reply.status(200).send({ message: "Supplier deleted successfully" })
   },
 }
