@@ -4,6 +4,7 @@ import { AuthRepository } from "../infrastructure/auth.prisma.repository"
 import {
   LoginPayloadDtoSchema,
   RegisterPayloadDtoSchema,
+  RegisterStoreDtoSchema,
   VerifyEmailDtoSchema,
   ForgotPasswordDtoSchema,
   ResetPasswordDtoSchema,
@@ -28,7 +29,13 @@ export const authController = {
   register: async (request: FastifyRequest, reply: FastifyReply) => {
     const data = RegisterPayloadDtoSchema.parse(request.body)
 
-    const result = await authService.register(data)
+    // Admin registers a user in their own store
+    const storeId = request.storeId
+    if (!storeId) {
+      throw new UnauthorizedError("Store context required")
+    }
+
+    const result = await authService.register(data, storeId)
 
     // When register is called by an admin (authenticated via authGuard),
     // we must NOT overwrite the admin's cookies with the new user's tokens.
@@ -44,6 +51,23 @@ export const authController = {
     return reply.status(201).send({
       message: result.message,
       user: result.user,
+      store: result.store,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken
+    })
+  },
+
+  registerStore: async (request: FastifyRequest, reply: FastifyReply) => {
+    const data = RegisterStoreDtoSchema.parse(request.body)
+
+    const result = await authService.registerStore(data)
+
+    setAuthCookies(reply, result.accessToken, result.refreshToken, env.NODE_ENV === "production")
+
+    return reply.status(201).send({
+      message: result.message,
+      user: result.user,
+      store: result.store,
       accessToken: result.accessToken,
       refreshToken: result.refreshToken
     })
@@ -69,6 +93,7 @@ export const authController = {
     return reply.status(200).send({
       message: result.message,
       user: result.user,
+      store: result.store,
       accessToken: result.accessToken,
       refreshToken: result.refreshToken
     })
@@ -102,6 +127,7 @@ export const authController = {
     return reply.status(200).send({
       message: result.message,
       user: result.user,
+      store: result.store,
       accessToken: result.accessToken,
       refreshToken: result.refreshToken
     })

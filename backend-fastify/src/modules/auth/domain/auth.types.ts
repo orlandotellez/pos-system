@@ -27,6 +27,13 @@ export interface IResetPasswordPayload {
   newPassword: string
 }
 
+export interface IStoreResponse {
+  id: string
+  name: string
+  address?: string
+  phone?: string
+}
+
 export interface IUserResponse {
   id: string
   name: string
@@ -35,6 +42,7 @@ export interface IUserResponse {
   role: Role
   phone?: string
   image?: string
+  store_id: string
   created_at: Date
   updated_at: Date
 }
@@ -42,6 +50,7 @@ export interface IUserResponse {
 export interface IAuthResponse {
   message: string
   user: IUserResponse
+  store: IStoreResponse
   accessToken: string
   refreshToken: string
 }
@@ -49,6 +58,7 @@ export interface IAuthResponse {
 export interface IRefreshResponse {
   message: string
   user: IUserResponse
+  store: IStoreResponse
   accessToken: string
   refreshToken: string
 }
@@ -88,4 +98,22 @@ export interface IForgotPasswordResponse {
 
 export interface IResetPasswordResponse {
   message: string
+}
+
+// ─── Register Store ───
+export interface IRegisterStorePayload {
+  storeName: string
+  storeAddress?: string
+  storePhone?: string
+  adminName: string
+  adminEmail: string
+  adminPassword: string
+}
+
+export interface IRegisterStoreResponse {
+  message: string
+  user: IUserResponse
+  store: IStoreResponse
+  accessToken: string
+  refreshToken: string
 }

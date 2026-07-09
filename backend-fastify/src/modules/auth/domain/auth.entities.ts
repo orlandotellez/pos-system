@@ -8,6 +8,7 @@ export interface IUserEntity {
   phone?: string
   image?: string
   role: Role
+  store_id: string
   created_at: Date
   updated_at: Date
   deleted_at?: Date
@@ -49,7 +50,7 @@ export interface IVerificationEntity {
   updated_at: Date
 }
 
-export type CreateUserData = Pick<IUserEntity, "name" | "email" | "role"> & {
+export type CreateUserData = Pick<IUserEntity, "name" | "email" | "role" | "store_id"> & {
   phone?: string
   image?: string
   email_verified?: boolean

@@ -1,6 +1,7 @@
 import { ConflictError, NotFoundError, UnauthorizedError } from "@/core/errors/AppError"
 import { comparePassword, hashPassword, generateVerificationCode } from "@/core/utils/crypto.utils"
 import { generateTokens, verifyToken } from "@/core/utils/token.utils"
+import { prisma } from "@/config/prisma"
 import type { IAuthRepository } from "../domain/auth.interface"
 import type {
   IAuthResponse,
@@ -17,7 +18,10 @@ import type {
   IVerifyEmailPayload,
   IForgotPasswordPayload,
   IResetPasswordPayload,
-  IRegisterPayload
+  IRegisterPayload,
+  IRegisterStorePayload,
+  IRegisterStoreResponse,
+  IStoreResponse,
 } from "../domain/auth.types"
 import type { Role } from "@/types/auth"
 import { env } from "@/config/env"
@@ -37,19 +41,36 @@ function mapUserToResponse(user: IUserEntity): IUserResponse {
     role: user.role as Role,
     phone: user.phone,
     image: user.image,
+    store_id: user.store_id,
     created_at: user.created_at,
-    updated_at: user.updated_at
+    updated_at: user.updated_at,
   }
+}
+
+function mapStoreToResponse(store: { id: string; name: string; address?: string | null; phone?: string | null }): IStoreResponse {
+  return {
+    id: store.id,
+    name: store.name,
+    address: store.address || undefined,
+    phone: store.phone || undefined,
+  }
+}
+
+async function getStoreInfo(storeId: string): Promise<IStoreResponse> {
+  const store = await prisma.store.findUnique({ where: { id: storeId } })
+  if (!store) throw new NotFoundError("Store not found")
+  return mapStoreToResponse(store)
 }
 
 export const createAuthService = (repository: IAuthRepository) => ({
 
-  register: async (data: IRegisterPayload): Promise<IAuthResponse> => {
+  register: async (data: IRegisterPayload, storeId: string): Promise<IAuthResponse> => {
     const { name, email, password, role = "cajero" } = data
 
-    const existingUser = await repository.user.findByEmail(email)
+    // Check email uniqueness within the same store
+    const existingUser = await repository.user.findByEmail(email, storeId)
     if (existingUser) {
-      throw new ConflictError("Email already registered")
+      throw new ConflictError("Email already registered in this store")
     }
 
     const hashedPassword = await hashPassword(password)
@@ -58,38 +79,140 @@ export const createAuthService = (repository: IAuthRepository) => ({
       name,
       email,
       role,
-      email_verified: false
+      email_verified: false,
+      store_id: storeId,
     })
 
     await repository.account.create({
       account_id: user.id,
       provider_id: "credentials",
       user_id: user.id,
-      password: hashedPassword
+      password: hashedPassword,
     })
 
     const verificationCode = generateVerificationCode()
     await repository.verification.create({
       identifier: email,
       value: verificationCode,
-      expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY)
+      expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY),
     })
 
     console.log(`Verification code for ${email}: ${verificationCode}`)
 
-    const { accessToken, refreshToken } = generateTokens(user.id, user.email, user.role as Role)
+    const store = await getStoreInfo(storeId)
+    const { accessToken, refreshToken } = generateTokens(user.id, user.email, user.role as Role, store.id, store.name)
 
     await repository.session.create({
       userId: user.id,
       token: refreshToken,
-      expiresAt: new Date(Date.now() + SESSION_EXPIRY)
+      expiresAt: new Date(Date.now() + SESSION_EXPIRY),
     })
 
     return {
       message: "User created successfully. Please verify your email.",
       user: mapUserToResponse(user),
+      store,
       accessToken,
-      refreshToken
+      refreshToken,
+    }
+  },
+
+  registerStore: async (data: IRegisterStorePayload): Promise<IRegisterStoreResponse> => {
+    const { storeName, storeAddress, storePhone, adminName, adminEmail, adminPassword } = data
+
+    // Check store name uniqueness
+    const existingStore = await prisma.store.findFirst({ where: { name: storeName } })
+    if (existingStore) {
+      throw new ConflictError("A store with this name already exists")
+    }
+
+    // Check email uniqueness within the future store (global email check for simplicity)
+    const existingUser = await repository.user.findByEmail(adminEmail)
+    if (existingUser) {
+      throw new ConflictError("Email already registered")
+    }
+
+    const hashedPassword = await hashPassword(adminPassword)
+
+    // Atomic transaction: store + user + account + settings + session
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create store
+      const store = await tx.store.create({
+        data: {
+          name: storeName,
+          address: storeAddress || "",
+          phone: storePhone || "",
+        },
+      })
+
+      // 2. Create admin user
+      const user = await tx.user.create({
+        data: {
+          name: adminName,
+          email: adminEmail,
+          role: "admin",
+          email_verified: true,
+          store_id: store.id,
+        },
+      })
+
+      // 3. Create account with hashed password
+      await tx.account.create({
+        data: {
+          account_id: user.id,
+          provider_id: "credentials",
+          user_id: user.id,
+          password: hashedPassword,
+        },
+      })
+
+      // 4. Create default settings for the store
+      await tx.settings.create({
+        data: {
+          store_id: store.id,
+          name: storeName,
+          address: storeAddress || "",
+          phone: storePhone || "",
+          tax_rate: 16,
+          low_stock_threshold: 5,
+        },
+      })
+
+      return { store, user }
+    })
+
+    // Generate tokens after transaction
+    const { accessToken, refreshToken } = generateTokens(
+      result.user.id,
+      result.user.email,
+      "admin",
+      result.store.id,
+      result.store.name,
+    )
+
+    await repository.session.create({
+      userId: result.user.id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + SESSION_EXPIRY),
+    })
+
+    return {
+      message: "Store created successfully",
+      user: {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        email_verified: true,
+        role: "admin",
+        phone: undefined,
+        image: undefined,
+        store_id: result.store.id,
+        created_at: result.user.created_at,
+        updated_at: result.user.updated_at,
+      },
+      store: mapStoreToResponse(result.store),
+      accessToken,
+      refreshToken,
     }
   },
 
@@ -118,19 +241,21 @@ export const createAuthService = (repository: IAuthRepository) => ({
       throw new UnauthorizedError("Account has been deactivated")
     }
 
-    const { accessToken, refreshToken } = generateTokens(user.id, user.email, user.role as Role)
+    const store = await getStoreInfo(user.store_id)
+    const { accessToken, refreshToken } = generateTokens(user.id, user.email, user.role as Role, store.id, store.name)
 
     await repository.session.create({
       userId: user.id,
       token: refreshToken,
-      expiresAt: new Date(Date.now() + SESSION_EXPIRY)
+      expiresAt: new Date(Date.now() + SESSION_EXPIRY),
     })
 
     return {
       message: "Login successfully",
       user: mapUserToResponse(user),
+      store,
       accessToken,
-      refreshToken
+      refreshToken,
     }
   },
 
@@ -138,7 +263,7 @@ export const createAuthService = (repository: IAuthRepository) => ({
     await repository.session.delete(refreshToken)
 
     return {
-      message: "Logged out successfully"
+      message: "Logged out successfully",
     }
   },
 
@@ -168,23 +293,27 @@ export const createAuthService = (repository: IAuthRepository) => ({
 
     await repository.session.delete(refreshToken)
 
+    const store = await getStoreInfo(user.store_id)
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(
       user.id,
       user.email,
-      user.role as Role
+      user.role as Role,
+      store.id,
+      store.name,
     )
 
     await repository.session.create({
       userId: user.id,
       token: newRefreshToken,
-      expiresAt: new Date(Date.now() + SESSION_EXPIRY)
+      expiresAt: new Date(Date.now() + SESSION_EXPIRY),
     })
 
     return {
       message: "Token refreshed successfully",
       user: mapUserToResponse(user),
+      store,
       accessToken,
-      refreshToken: newRefreshToken
+      refreshToken: newRefreshToken,
     }
   },
 
@@ -193,7 +322,7 @@ export const createAuthService = (repository: IAuthRepository) => ({
 
     const verification = await repository.verification.findByIdentifierAndValue(
       identifier,
-      code
+      code,
     )
 
     if (!verification) {
@@ -214,22 +343,25 @@ export const createAuthService = (repository: IAuthRepository) => ({
 
     await repository.verification.deleteByIdentifier(identifier)
 
+    const store = await getStoreInfo(user.store_id)
     const { accessToken, refreshToken } = generateTokens(
       user.id,
       user.email,
-      user.role as Role
+      user.role as Role,
+      store.id,
+      store.name,
     )
 
     await repository.session.create({
       userId: user.id,
       token: refreshToken,
-      expiresAt: new Date(Date.now() + SESSION_EXPIRY)
+      expiresAt: new Date(Date.now() + SESSION_EXPIRY),
     })
 
     return {
       message: "Email verified successfully",
       accessToken,
-      refreshToken
+      refreshToken,
     }
   },
 
@@ -240,7 +372,7 @@ export const createAuthService = (repository: IAuthRepository) => ({
     if (!user) {
       return {
         message: "If the email exists, a reset code has been sent",
-        expires_at: new Date(Date.now() + VERIFICATION_CODE_EXPIRY)
+        expires_at: new Date(Date.now() + VERIFICATION_CODE_EXPIRY),
       }
     }
 
@@ -248,14 +380,14 @@ export const createAuthService = (repository: IAuthRepository) => ({
     await repository.verification.create({
       identifier: `reset:${email}`,
       value: resetCode,
-      expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY)
+      expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY),
     })
 
     console.log(`Password reset code for ${email}: ${resetCode}`)
 
     return {
       message: "If the email exists, a reset code has been sent",
-      expires_at: new Date(Date.now() + VERIFICATION_CODE_EXPIRY)
+      expires_at: new Date(Date.now() + VERIFICATION_CODE_EXPIRY),
     }
   },
 
@@ -264,7 +396,7 @@ export const createAuthService = (repository: IAuthRepository) => ({
 
     const verification = await repository.verification.findByIdentifierAndValue(
       `reset:${email}`,
-      code
+      code,
     )
 
     if (!verification) {
@@ -294,7 +426,7 @@ export const createAuthService = (repository: IAuthRepository) => ({
     await repository.verification.deleteByIdentifier(`reset:${email}`)
 
     return {
-      message: "Password reset successfully. Please login with your new password."
+      message: "Password reset successfully. Please login with your new password.",
     }
   },
 
@@ -302,24 +434,24 @@ export const createAuthService = (repository: IAuthRepository) => ({
     const sessions = await repository.session.findByUserId(userId)
 
     const validSessions: ISessionResponse[] = sessions
-      .filter(s => s.expires_at > new Date())
-      .map(s => ({
+      .filter((s) => s.expires_at > new Date())
+      .map((s) => ({
         id: s.id,
         expires_at: s.expires_at,
         ip_address: s.ip_address,
         user_agent: s.user_agent,
         created_at: s.created_at,
-        updated_at: s.updated_at
+        updated_at: s.updated_at,
       }))
 
     return {
-      sessions: validSessions
+      sessions: validSessions,
     }
   },
 
   revokeSession: async (userId: string, sessionId: string): Promise<ILogoutResponse> => {
     const sessions = await repository.session.findByUserId(userId)
-    const session = sessions.find(s => s.id === sessionId)
+    const session = sessions.find((s) => s.id === sessionId)
 
     if (!session) {
       throw new NotFoundError("Session not found")
@@ -328,7 +460,7 @@ export const createAuthService = (repository: IAuthRepository) => ({
     await repository.session.delete(session.token)
 
     return {
-      message: "Session revoked successfully"
+      message: "Session revoked successfully",
     }
   },
 
@@ -338,7 +470,7 @@ export const createAuthService = (repository: IAuthRepository) => ({
     if (!user) {
       return {
         message: "If the email exists, a new verification code has been sent",
-        expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY)
+        expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY),
       }
     }
 
@@ -352,14 +484,14 @@ export const createAuthService = (repository: IAuthRepository) => ({
     await repository.verification.create({
       identifier: email,
       value: verificationCode,
-      expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY)
+      expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY),
     })
 
     console.log(`Verification code for ${email}: ${verificationCode}`)
 
     return {
       message: "New verification code sent",
-      expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY)
+      expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY),
     }
-  }
+  },
 })

@@ -11,6 +11,7 @@ export function mapPrismaUserToEntity(user: user): IUserEntity {
     phone: user.phone || undefined,
     image: user.image || undefined,
     role: user.role as Role,
+    store_id: user.store_id,
     created_at: user.created_at,
     updated_at: user.updated_at,
     deleted_at: user.deleted_at || undefined

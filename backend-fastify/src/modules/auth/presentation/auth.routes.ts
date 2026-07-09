@@ -5,6 +5,7 @@ import { toJsonSchema } from "@/presentation/swagger-schema"
 import {
   LoginPayloadDtoSchema,
   RegisterPayloadDtoSchema,
+  RegisterStoreDtoSchema,
   RefreshTokenDtoSchema,
   VerifyEmailDtoSchema,
   ResendVerificationDtoSchema,
@@ -16,6 +17,10 @@ const TAGS = ["Auth"]
 
 export const authRoutes = async (fastify: FastifyInstance, _opts: FastifyPluginOptions) => {
   // PUBLIC ROUTES
+  fastify.post("/register-store", {
+    schema: { tags: TAGS, body: toJsonSchema(RegisterStoreDtoSchema) },
+  }, authController.registerStore)
+
   fastify.post("/register", {
     schema: { tags: TAGS, body: toJsonSchema(RegisterPayloadDtoSchema) },
     preHandler: [authGuard, adminGuard],

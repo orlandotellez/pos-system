@@ -26,10 +26,12 @@ import {
 } from "./mappers/auth.prisma.mappers"
 
 const UserRepository: IUserRepository = {
-  async findByEmail(email: string): Promise<IUserEntity | null> {
-    const user = await prisma.user.findFirst({
-      where: { email, deleted_at: null }
-    })
+  async findByEmail(email: string, storeId?: string): Promise<IUserEntity | null> {
+    const where: any = { email, deleted_at: null }
+    if (storeId) {
+      where.store_id = storeId
+    }
+    const user = await prisma.user.findFirst({ where })
     if (!user) return null
     return mapPrismaUserToEntity(user)
   },
@@ -50,7 +52,8 @@ const UserRepository: IUserRepository = {
         phone: data.phone,
         image: data.image,
         role: data.role || "cajero",
-        email_verified: data.email_verified || false
+        email_verified: data.email_verified || false,
+        store_id: data.store_id,
       }
     })
     return mapPrismaUserToEntity(user)

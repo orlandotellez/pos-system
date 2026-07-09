@@ -11,7 +11,7 @@ import type {
 } from "./auth.entities"
 
 export interface IUserRepository {
-  findByEmail(email: string): Promise<IUserEntity | null>
+  findByEmail(email: string, storeId?: string): Promise<IUserEntity | null>
   findById(id: string): Promise<IUserEntity | null>
   create(data: CreateUserData): Promise<IUserEntity>
   update(id: string, data: UpdateUserData): Promise<IUserEntity>

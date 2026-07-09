@@ -39,6 +39,15 @@ export const RevokeSessionDtoSchema = z.object({
   sessionId: z.string().uuid("Invalid session ID")
 })
 
+export const RegisterStoreDtoSchema = z.object({
+  storeName: z.string().min(2, "Store name must be at least 2 characters"),
+  storeAddress: z.string().optional(),
+  storePhone: z.string().optional(),
+  adminName: z.string().min(2, "Name must be at least 2 characters"),
+  adminEmail: z.string().email("Invalid email format"),
+  adminPassword: z.string().min(8, "Password must be at least 8 characters"),
+})
+
 export type RegisterPayloadDto = z.infer<typeof RegisterPayloadDtoSchema>
 export type LoginPayloadDto = z.infer<typeof LoginPayloadDtoSchema>
 export type VerifyEmailDto = z.infer<typeof VerifyEmailDtoSchema>
@@ -47,3 +56,4 @@ export type ForgotPasswordDto = z.infer<typeof ForgotPasswordDtoSchema>
 export type ResetPasswordDto = z.infer<typeof ResetPasswordDtoSchema>
 export type RefreshTokenDto = z.infer<typeof RefreshTokenDtoSchema>
 export type RevokeSessionDto = z.infer<typeof RevokeSessionDtoSchema>
+export type RegisterStoreDto = z.infer<typeof RegisterStoreDtoSchema>
