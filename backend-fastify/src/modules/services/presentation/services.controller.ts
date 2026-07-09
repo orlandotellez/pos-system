@@ -8,32 +8,32 @@ const serviceService = createServiceService(ServiceRepository)
 export const servicesController = {
   list: async (request: FastifyRequest, reply: FastifyReply) => {
     const query = ServiceQuerySchema.parse(request.query)
-    const result = await serviceService.list(query)
+    const result = await serviceService.list(query, request.storeId)
     return reply.status(200).send(result)
   },
 
   getById: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
-    const result = await serviceService.getById(id)
+    const result = await serviceService.getById(id, request.storeId)
     return reply.status(200).send(result)
   },
 
   create: async (request: FastifyRequest, reply: FastifyReply) => {
     const data = CreateServiceDtoSchema.parse(request.body)
-    const result = await serviceService.create(data)
+    const result = await serviceService.create(data, request.storeId)
     return reply.status(201).send(result)
   },
 
   update: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
     const data = UpdateServiceDtoSchema.parse(request.body)
-    const result = await serviceService.update(id, data)
+    const result = await serviceService.update(id, data, request.storeId)
     return reply.status(200).send(result)
   },
 
   delete: async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string }
-    await serviceService.delete(id)
+    await serviceService.delete(id, request.storeId)
     return reply.status(200).send({ message: "Service deleted successfully" })
   },
 }

@@ -55,7 +55,7 @@ function mapToEntity(service: ServiceRecord): IServiceEntity {
 
 export const ServiceRepository: IServiceRepository = {
   async findAll(params) {
-    const where: Prisma.serviceWhereInput = { deleted_at: null }
+    const where: Prisma.serviceWhereInput = { deleted_at: null, ...(params?.storeId && { store_id: params.storeId }) }
 
     if (params?.search) {
       where.OR = [
@@ -90,18 +90,19 @@ export const ServiceRepository: IServiceRepository = {
     }
   },
 
-  async findById(id: string) {
+  async findById(id: string, storeId?: string) {
     const service = await prisma.service.findFirst({
-      where: { id, deleted_at: null },
+      where: { id, deleted_at: null, ...(storeId && { store_id: storeId }) },
       select: serviceSelect,
     })
     if (!service) return null
     return mapToEntity(service)
   },
 
-  async create(data: CreateServiceData) {
+  async create(data: CreateServiceData, storeId?: string) {
     const service = await prisma.service.create({
       data: {
+        ...(storeId && { store_id: storeId }),
         name: data.name,
         description: data.description,
         base_price: data.base_price,
@@ -122,7 +123,7 @@ export const ServiceRepository: IServiceRepository = {
     return mapToEntity(service)
   },
 
-  async update(id: string, data: UpdateServiceData) {
+  async update(id: string, data: UpdateServiceData, storeId?: string) {
     // If products are provided, replace them
     if (data.products !== undefined) {
       await prisma.service_product.deleteMany({ where: { service_id: id } })
@@ -139,7 +140,7 @@ export const ServiceRepository: IServiceRepository = {
     }
 
     const service = await prisma.service.update({
-      where: { id },
+      where: { id, ...(storeId && { store_id: storeId }) },
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
@@ -151,9 +152,9 @@ export const ServiceRepository: IServiceRepository = {
     return mapToEntity(service)
   },
 
-  async softDelete(id: string) {
+  async softDelete(id: string, storeId?: string) {
     await prisma.service.update({
-      where: { id },
+      where: { id, ...(storeId && { store_id: storeId }) },
       data: { deleted_at: new Date() },
     })
   },
