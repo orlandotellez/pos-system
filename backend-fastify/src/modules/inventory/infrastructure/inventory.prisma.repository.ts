@@ -29,6 +29,7 @@ export const InventoryRepository: IInventoryRepository = {
         note: data.note,
         batch_id: data.batch_id,
         user_id: data.user_id,
+        store_id: data.store_id!,
       },
       include: { product: { select: { name: true } } },
     })
@@ -36,8 +37,10 @@ export const InventoryRepository: IInventoryRepository = {
   },
 
   async findByProductId(productId: string, params) {
+    const where: { product_id: string; store_id?: string } = { product_id: productId }
+    if (params?.storeId) where.store_id = params.storeId
     const movements = await prisma.inventory_movement.findMany({
-      where: { product_id: productId },
+      where,
       include: { product: { select: { name: true } } },
       orderBy: { created_at: "desc" },
       take: params?.limit || 50,
@@ -46,9 +49,10 @@ export const InventoryRepository: IInventoryRepository = {
   },
 
   async findAll(params) {
-    const where: { product_id?: string; movement_type?: string } = {}
+    const where: { product_id?: string; movement_type?: string; store_id?: string } = {}
     if (params?.product_id) where.product_id = params.product_id
     if (params?.movement_type) where.movement_type = params.movement_type
+    if (params?.storeId) where.store_id = params.storeId
 
     const page = params?.page || 1
     const limit = params?.limit || 50

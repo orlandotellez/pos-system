@@ -43,13 +43,13 @@ export const createInventoryService = (
     return mapMovementToResponse(movement, product.name)
   },
 
-  getByProduct: async (productId: string): Promise<IInventoryMovementListResponse> => {
+  getByProduct: async (productId: string, storeId?: string): Promise<IInventoryMovementListResponse> => {
     const product = await productRepository.findById(productId)
     if (!product || product.deleted_at) {
       throw new NotFoundError("Product not found")
     }
 
-    const movements = await movementRepository.findByProductId(productId)
+    const movements = await movementRepository.findByProductId(productId, { storeId })
     return {
       movements: movements.map(m => mapMovementToResponse(m, product.name)),
       total: movements.length,
@@ -58,7 +58,7 @@ export const createInventoryService = (
     }
   },
 
-  list: async (params?: { product_id?: string; movement_type?: string; page?: number; limit?: number }): Promise<IInventoryMovementListResponse> => {
+  list: async (params?: { product_id?: string; movement_type?: string; page?: number; limit?: number; storeId?: string }): Promise<IInventoryMovementListResponse> => {
     const result = await movementRepository.findAll(params)
     return {
       movements: result.movements.map(m => mapMovementToResponse(m)),

@@ -13,19 +13,19 @@ export const inventoryController = {
     if (!userId) throw new UnauthorizedError("Authentication required")
 
     const data = CreateMovementDtoSchema.parse(request.body)
-    const result = await inventoryService.create({ ...data, user_id: userId })
+    const result = await inventoryService.create({ ...data, user_id: userId, store_id: request.storeId })
     return reply.status(201).send(result)
   },
 
   getByProduct: async (request: FastifyRequest, reply: FastifyReply) => {
     const { productId } = request.params as { productId: string }
-    const result = await inventoryService.getByProduct(productId)
+    const result = await inventoryService.getByProduct(productId, request.storeId)
     return reply.status(200).send(result)
   },
 
   list: async (request: FastifyRequest, reply: FastifyReply) => {
     const query = MovementQuerySchema.parse(request.query)
-    const result = await inventoryService.list(query)
+    const result = await inventoryService.list({ ...query, storeId: request.storeId })
     return reply.status(200).send(result)
   },
 

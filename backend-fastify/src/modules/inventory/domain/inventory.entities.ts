@@ -7,6 +7,7 @@ export interface IInventoryMovementEntity {
   note?: string
   user_id: string
   batch_id?: string
+  store_id?: string
   created_at: Date
 }
 
@@ -17,4 +18,5 @@ export type CreateMovementData = {
   note?: string
   batch_id?: string
   user_id: string
+  store_id?: string
 }
