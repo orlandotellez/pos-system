@@ -381,20 +381,3 @@ cargo clippy --all-targets  # Lints
 ```
 
 ---
-
-## Documentación adicional
-
-Cada subproyecto incluye documentación propia más detallada:
-
-- `backend-fastify/docs/manual-fastify.md` — guía de uso interno del backend Node.
-- `backend-fastify/docs/prisma.md` — convenciones de Prisma aplicadas en el proyecto.
-- `backend-rust/docs/manual-axum.md` — guía de uso del backend Rust.
-- `backend-rust/docs/sqlx.md` — convenciones de SQLx.
-- `backend-rust/docs/estructura.md` — layout de carpetas y patrones del módulo Rust.
-- `frontend/src-tauri/` — config Tauri inline (`tauri.conf.json`, capabilities).
-
----
-
-## Licencia
-
-Proyecto privado. Reservados todos los derechos.
