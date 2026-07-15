@@ -2,10 +2,22 @@
 -- Creates all enums, tables, indexes, and foreign keys
 
 -- CreateEnum: ROLE
-CREATE TYPE "ROLE" AS ENUM ('admin', 'cajero');
+CREATE TYPE role AS ENUM ('admin', 'cajero');
 
 -- CreateEnum: UNIT_TYPE
 CREATE TYPE "UNIT_TYPE" AS ENUM ('unidad', 'paquete', 'caja', 'bolsa', 'botella', 'lata', 'sobre', 'barra', 'rollo', 'galon', 'ristra');
+
+-- CreateTable: stores (multi-tenant support)
+CREATE TABLE "stores" (
+    "id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "address" TEXT,
+    "phone" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "stores_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable: users
 CREATE TABLE "users" (
@@ -15,7 +27,8 @@ CREATE TABLE "users" (
     "email_verified" BOOLEAN NOT NULL DEFAULT false,
     "phone" TEXT,
     "image" TEXT,
-    "role" "ROLE" NOT NULL DEFAULT 'cajero',
+    "role" role NOT NULL DEFAULT 'cajero',
+    "store_id" UUID,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
     "deleted_at" TIMESTAMPTZ,
@@ -252,15 +265,27 @@ CREATE TABLE "settings" (
     "tax_rate" DECIMAL(10,2) NOT NULL DEFAULT 16,
     "low_stock_threshold" INTEGER NOT NULL DEFAULT 5,
     "ticket_footer" TEXT,
+    "store_id" UUID NOT NULL,
+    "printer_name" TEXT,
+    "printer_interface" TEXT,
+    "printer_ip" TEXT,
+    "printer_port" INTEGER,
+    "paper_size" TEXT DEFAULT '80mm',
+    "printer_cut_after" BOOLEAN NOT NULL DEFAULT true,
+    "printer_open_drawer" BOOLEAN NOT NULL DEFAULT false,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT "settings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndexes
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+CREATE UNIQUE INDEX "stores_name_key" ON "stores"("name");
+CREATE INDEX "stores_name_idx" ON "stores"("name");
+
+CREATE UNIQUE INDEX "users_store_id_email_key" ON "users"("store_id", "email");
 CREATE INDEX "users_email_idx" ON "users"("email");
 CREATE INDEX "users_role_idx" ON "users"("role");
+CREATE INDEX "users_store_id_idx" ON "users"("store_id");
 CREATE INDEX "session_user_id_idx" ON "session"("user_id");
 CREATE INDEX "account_user_id_idx" ON "account"("user_id");
 CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
@@ -295,6 +320,9 @@ CREATE INDEX "inventory_movements_movement_type_idx" ON "inventory_movements"("m
 CREATE INDEX "inventory_movements_batch_id_idx" ON "inventory_movements"("batch_id");
 CREATE INDEX "inventory_movements_created_at_idx" ON "inventory_movements"("created_at");
 
+CREATE UNIQUE INDEX "settings_store_id_key" ON "settings"("store_id");
+CREATE INDEX "settings_store_id_idx" ON "settings"("store_id");
+
 -- AddForeignKeys
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -316,3 +344,7 @@ ALTER TABLE "inventory_batch_items" ADD CONSTRAINT "inventory_batch_items_produc
 ALTER TABLE "inventory_movements" ADD CONSTRAINT "inventory_movements_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "inventory_movements" ADD CONSTRAINT "inventory_movements_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "inventory_movements" ADD CONSTRAINT "inventory_movements_batch_id_fkey" FOREIGN KEY ("batch_id") REFERENCES "inventory_batches"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Store foreign keys
+ALTER TABLE "users" ADD CONSTRAINT "users_store_id_fkey" FOREIGN KEY ("store_id") REFERENCES "stores"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "settings" ADD CONSTRAINT "settings_store_id_fkey" FOREIGN KEY ("store_id") REFERENCES "stores"("id") ON DELETE CASCADE ON UPDATE CASCADE;
