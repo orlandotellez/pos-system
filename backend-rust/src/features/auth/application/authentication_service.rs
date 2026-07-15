@@ -56,7 +56,11 @@ impl AuthenticationService {
         let token_pair = jwt::generate_tokens(
             &account.user_id.to_string(),
             &account.email,
-            account.role.as_deref().unwrap_or("cajero"),
+            account
+                .role
+                .as_ref()
+                .map(|r| r.as_str())
+                .unwrap_or("cajero"),
         )?;
 
         // 5. Crear sesión con refresh token
@@ -77,7 +81,7 @@ impl AuthenticationService {
             name: account.name,
             email: account.email,
             email_verified: account.email_verified,
-            role: account.role,
+            role: account.role.map(|r| r.to_string()),
             image: account.image,
             created_at: account.created_at,
             updated_at: account.updated_at,
@@ -129,7 +133,7 @@ impl AuthenticationService {
         let token_pair = jwt::generate_tokens(
             &user.id.to_string(),
             &user.email,
-            user.role.as_deref().unwrap_or("cajero"),
+            user.role.as_ref().map(|r| r.as_str()).unwrap_or("cajero"),
         )?;
 
         // 7. Crear nueva sesión
@@ -214,7 +218,7 @@ impl AuthenticationService {
         let token_pair = jwt::generate_tokens(
             &user.id.to_string(),
             &user.email,
-            user.role.as_deref().unwrap_or("cajero"),
+            user.role.as_ref().map(|r| r.as_str()).unwrap_or("cajero"),
         )?;
 
         // 7. Crear nueva sesión

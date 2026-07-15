@@ -4,15 +4,14 @@ use crate::{
     features::auth::{
         domain::{
             contracts::{
-                session_repository::SessionRepository,
-                user_repository::UserRepository,
+                session_repository::SessionRepository, user_repository::UserRepository,
                 verification_repository::VerificationRepository,
             },
             entities::User,
+            enums::Role,
         },
         infrastructure::sqlx::{
-            account_repository::SqlxAccountRepository,
-            session_repository::SqlxSessionRepository,
+            account_repository::SqlxAccountRepository, session_repository::SqlxSessionRepository,
             user_respository::SqlxUserRepository,
             verification_repository::SqlxVerificationRepository,
         },
@@ -51,15 +50,15 @@ fn generate_verification_code() -> String {
     code
 }
 
-fn map_role(request_role: Option<String>) -> Result<&'static str, AppError> {
+fn map_role(request_role: Option<String>) -> Result<Role, AppError> {
     match request_role.as_deref() {
-        Some("admin") => Ok("admin"),
-        Some("cajero") => Ok("cajero"),
+        Some("admin") => Ok(Role::Admin),
+        Some("cajero") => Ok(Role::Cajero),
         Some(other) => Err(AppError::BadRequest(format!(
             "Rol inválido '{}'. Solo se permite 'admin' o 'cajero'",
             other
         ))),
-        None => Ok("cajero"),
+        None => Ok(Role::Cajero),
     }
 }
 
@@ -83,8 +82,8 @@ impl RegistrationService {
 
         // 2. Crear user (transaccional)
         let role = map_role(payload.role)?;
-        let user: User = SqlxUserRepository::create(&mut tx, &payload.name, &payload.email, role)
-            .await?;
+        let user: User =
+            SqlxUserRepository::create(&mut tx, &payload.name, &payload.email, role).await?;
 
         // 3. Crear account (transaccional)
         SqlxAccountRepository::create(&mut tx, &payload.email, &hashed_password, user.id).await?;
@@ -99,7 +98,11 @@ impl RegistrationService {
         )
         .await?;
 
-        tracing::info!("Verification code for {}: {}", payload.email, verification_code);
+        tracing::info!(
+            "Verification code for {}: {}",
+            payload.email,
+            verification_code
+        );
 
         tx.commit().await?;
 
@@ -107,7 +110,7 @@ impl RegistrationService {
         let token_pair = jwt::generate_tokens(
             &user.id.to_string(),
             &user.email,
-            user.role.as_deref().unwrap_or("cajero"),
+            user.role.as_ref().map(|r| r.as_str()).unwrap_or("cajero"),
         )?;
 
         // 6. Crear session con refresh token

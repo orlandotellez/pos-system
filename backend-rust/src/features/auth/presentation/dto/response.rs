@@ -1,10 +1,7 @@
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::features::auth::{
-    domain::entities::User,
-    infrastructure::models::session::Session,
-};
+use crate::features::auth::{domain::entities::User, infrastructure::models::session::Session};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -78,7 +75,7 @@ impl From<User> for UserResponse {
             name: user.name,
             email: user.email,
             email_verified: user.email_verified,
-            role: user.role,
+            role: user.role.map(|r| r.to_string()),
             image: user.image,
             created_at: user.created_at,
             updated_at: user.updated_at,

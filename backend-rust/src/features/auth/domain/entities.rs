@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use uuid::Uuid;
 
+use crate::features::auth::domain::enums::Role;
+
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct User {
     pub id: Uuid,
@@ -10,7 +12,7 @@ pub struct User {
     pub email: String,
     pub email_verified: bool,
     pub image: Option<String>,
-    pub role: Option<String>,
+    pub role: Option<Role>,
     pub created_at: Option<DateTime<Utc>>,
     pub updated_at: Option<DateTime<Utc>>,
 }
@@ -22,7 +24,7 @@ pub struct UserWithPassword {
     pub email: String,
     pub email_verified: bool,
     pub image: Option<String>,
-    pub role: Option<String>,
+    pub role: Option<Role>,
     pub password: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
     pub updated_at: Option<DateTime<Utc>>,
