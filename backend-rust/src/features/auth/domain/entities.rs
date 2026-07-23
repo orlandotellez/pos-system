@@ -13,6 +13,7 @@ pub struct User {
     pub email_verified: bool,
     pub image: Option<String>,
     pub role: Option<Role>,
+    pub store_id: Option<Uuid>,
     pub created_at: Option<DateTime<Utc>>,
     pub updated_at: Option<DateTime<Utc>>,
 }
@@ -26,6 +27,7 @@ pub struct UserWithPassword {
     pub image: Option<String>,
     pub role: Option<Role>,
     pub password: Option<String>,
+    pub store_id: Option<Uuid>,
     pub created_at: Option<DateTime<Utc>>,
     pub updated_at: Option<DateTime<Utc>>,
 }

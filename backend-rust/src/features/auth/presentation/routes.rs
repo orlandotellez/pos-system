@@ -9,12 +9,14 @@ use crate::{
         registration_handler, resend_verification_handler, reset_password_handler, session_handler,
         verify_email_handler,
     },
+    features::stores::presentation::handlers::store_handler,
     shared::{security::auth_guard, state::app_state::AppState},
 };
 
 pub fn routes() -> Router<AppState> {
     let public_routes = Router::new()
         .route("/login", post(login_handler::login_user))
+        .route("/register-store", post(store_handler::register_store))
         .route("/refresh", post(refresh_handler::refresh_token))
         .route("/logout", post(logout_handler::logout_user))
         .route("/verify-email", post(verify_email_handler::verify_email))

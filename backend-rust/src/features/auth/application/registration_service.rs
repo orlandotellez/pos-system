@@ -83,7 +83,8 @@ impl RegistrationService {
         // 2. Crear user (transaccional)
         let role = map_role(payload.role)?;
         let user: User =
-            SqlxUserRepository::create(&mut tx, &payload.name, &payload.email, role).await?;
+            SqlxUserRepository::create(&mut tx, &payload.name, &payload.email, role, false, None)
+                .await?;
 
         // 3. Crear account (transaccional)
         SqlxAccountRepository::create(&mut tx, &payload.email, &hashed_password, user.id).await?;

@@ -39,6 +39,7 @@ impl AccountRepository for SqlxAccountRepository {
                 u.email_verified,
                 u.image,
                 u.role as role,
+                u.store_id,
                 u.created_at,
                 u.updated_at,
                 a.password

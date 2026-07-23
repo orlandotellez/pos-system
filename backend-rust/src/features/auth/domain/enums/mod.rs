@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 // ─── Role enum ───
 
 #[derive(Debug, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(type_name = "ROLE", rename_all = "lowercase")]
+#[sqlx(type_name = "role", rename_all = "lowercase")]
 pub enum Role {
     Admin,
     Cajero,
