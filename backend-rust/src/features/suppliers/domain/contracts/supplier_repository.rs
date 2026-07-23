@@ -18,4 +18,12 @@ pub trait SupplierRepository: Send + Sync {
         store_id: Uuid,
         params: ListSupplierParams,
     ) -> Result<PaginatedResult<Supplier>, AppError>;
+
+    async fn find_by_id(&self, store_id: Uuid, id: Uuid) -> Result<Option<Supplier>, AppError>;
+
+    async fn count_products_by_supplier(
+        &self,
+        store_id: Uuid,
+        supplier_id: Uuid,
+    ) -> Result<i64, AppError>;
 }

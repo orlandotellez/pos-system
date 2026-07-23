@@ -1,6 +1,6 @@
 use axum::{
     Extension, Json,
-    extract::{Query, State},
+    extract::{Path, Query, State},
 };
 use uuid::Uuid;
 
@@ -8,7 +8,8 @@ use crate::{
     features::suppliers::{
         application::supplier_service::SupplierService,
         infrastructure::{
-            mappers::SupplierListResponse, models::list_suppliers_params::ListSupplierParams,
+            mappers::{SupplierDetailResponse, SupplierListResponse},
+            models::list_suppliers_params::ListSupplierParams,
         },
         presentation::dto::request::SupplierQueryParams,
     },
@@ -47,5 +48,20 @@ pub async fn list_suppliers(
 
     let response: SupplierListResponse =
         SupplierService::list_suppliers(&state, store_id, params).await?;
+    Ok(Json(response))
+}
+
+pub async fn get_supplier(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<SupplierDetailResponse>, AppError> {
+    let store_id: Uuid = claims
+        .store_id
+        .ok_or_else(|| AppError::Unauthorized("No store contet in token".to_string()))?;
+
+    let response: SupplierDetailResponse =
+        SupplierService::get_supplier_by_id(&state, store_id, id).await?;
+
     Ok(Json(response))
 }

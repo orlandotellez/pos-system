@@ -127,6 +127,7 @@ CREATE TABLE "products" (
     "stock" INTEGER NOT NULL DEFAULT 0,
     "low_stock_threshold" INTEGER NOT NULL DEFAULT 5,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "store_id" UUID NOT NULL REFERENCES "stores"("id") ON DELETE CASCADE,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
     "deleted_at" TIMESTAMPTZ,

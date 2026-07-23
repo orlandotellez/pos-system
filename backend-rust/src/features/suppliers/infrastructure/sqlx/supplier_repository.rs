@@ -102,4 +102,57 @@ impl SupplierRepository for SqlxSupplierRepository {
 
         Ok(PaginatedResult::new(items, total))
     }
+
+    async fn find_by_id(&self, store_id: Uuid, id: Uuid) -> Result<Option<Supplier>, AppError> {
+        let supplier: Option<Supplier> = sqlx::query_as!(
+            Supplier,
+            r#"
+            SELECT
+                id,
+                name,
+                contact_name,
+                email,
+                phone,
+                address,
+                notes,
+                is_active,
+                store_id,
+                created_at,
+                updated_at,
+                deleted_at
+            FROM suppliers 
+            WHERE id = $1
+                AND store_id = $2
+                AND deleted_at IS NULL
+            "#,
+            id,
+            store_id,
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(supplier)
+    }
+
+    async fn count_products_by_supplier(
+        &self,
+        store_id: Uuid,
+        supplier_id: Uuid,
+    ) -> Result<i64, AppError> {
+        let count: i64 = sqlx::query_scalar!(
+            r#"
+            SELECT COUNT(*) AS "count!"
+            FROM products 
+            WHERE supplier_id = $1 
+                AND store_id = $2 
+                AND deleted_at IS NULL
+            "#,
+            supplier_id,
+            store_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(count)
+    }
 }

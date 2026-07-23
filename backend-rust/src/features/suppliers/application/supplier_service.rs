@@ -4,7 +4,7 @@ use crate::{
     features::suppliers::{
         domain::{contracts::supplier_repository::SupplierRepository, entities::Supplier},
         infrastructure::{
-            mappers::SupplierListResponse,
+            mappers::{SupplierDetailResponse, SupplierListResponse},
             models::{
                 list_suppliers_params::ListSupplierParams, paginated_result::PaginatedResult,
             },
@@ -35,5 +35,22 @@ impl SupplierService {
             page,
             limit,
         ))
+    }
+
+    pub async fn get_supplier_by_id(
+        state: &AppState,
+        store_id: Uuid,
+        id: Uuid,
+    ) -> Result<SupplierDetailResponse, AppError> {
+        let repo: SqlxSupplierRepository = SqlxSupplierRepository::new(state.db.clone());
+
+        let supplier: Supplier = repo
+            .find_by_id(store_id, id)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Supplier not found".to_string()))?;
+
+        let product_count: i64 = repo.count_products_by_supplier(store_id, id).await?;
+
+        Ok(SupplierDetailResponse::build(supplier, product_count))
     }
 }
