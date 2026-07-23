@@ -20,7 +20,7 @@ use crate::{
 };
 
 const HOST: IpAddr = IpAddr::V4(Ipv4Addr::UNSPECIFIED);
-const PORT: u16 = 4001;
+const PORT: u16 = 4000;
 
 #[tokio::main]
 async fn main() {

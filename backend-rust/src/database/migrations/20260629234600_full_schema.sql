@@ -104,6 +104,7 @@ CREATE TABLE "suppliers" (
     "address" TEXT,
     "notes" TEXT,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "store_id" UUID NOT NULL REFERENCES "stores"("id") ON DELETE CASCADE,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
     "deleted_at" TIMESTAMPTZ,
