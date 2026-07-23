@@ -11,8 +11,14 @@ async fn health() -> Json<Value> {
 }
 
 pub fn create_routes() -> Router<AppState> {
-    Router::new().route("/health", get(health)).nest(
-        "/api/v1/auth",
-        features::auth::presentation::routes::routes(),
-    )
+    Router::new()
+        .route("/health", get(health))
+        .nest(
+            "/api/v1/auth",
+            features::auth::presentation::routes::routes(),
+        )
+        .nest(
+            "/api/v1/categories",
+            features::categories::presentation::routes::routes(),
+        )
 }
