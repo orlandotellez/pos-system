@@ -86,6 +86,7 @@ CREATE TABLE "categories" (
     "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
+    "store_id" UUID NOT NULL REFERENCES "stores"("id") ON DELETE CASCADE,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
     "deleted_at" TIMESTAMPTZ,
@@ -288,9 +289,12 @@ CREATE INDEX "users_role_idx" ON "users"("role");
 CREATE INDEX "users_store_id_idx" ON "users"("store_id");
 CREATE INDEX "session_user_id_idx" ON "session"("user_id");
 CREATE INDEX "account_user_id_idx" ON "account"("user_id");
-CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
 CREATE INDEX "categories_name_idx" ON "categories"("name");
+
 CREATE INDEX "categories_deleted_at_idx" ON "categories"("deleted_at");
+CREATE UNIQUE INDEX "categories_store_id_name_key" ON "categories"("store_id", "name");
+ 
+CREATE INDEX "categories_store_id_idx" ON "categories"("store_id");
 CREATE INDEX "suppliers_name_idx" ON "suppliers"("name");
 CREATE INDEX "suppliers_is_active_idx" ON "suppliers"("is_active");
 CREATE INDEX "products_barcode_idx" ON "products"("barcode");
