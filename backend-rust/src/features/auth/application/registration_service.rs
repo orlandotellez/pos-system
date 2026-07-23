@@ -112,6 +112,7 @@ impl RegistrationService {
             &user.id.to_string(),
             &user.email,
             user.role.as_ref().map(|r| r.as_str()).unwrap_or("cajero"),
+            user.store_id,
         )?;
 
         // 6. Crear session con refresh token

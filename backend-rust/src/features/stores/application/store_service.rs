@@ -3,9 +3,7 @@ use chrono::Utc;
 use crate::{
     features::auth::{
         domain::{
-            contracts::{
-                session_repository::SessionRepository, user_repository::UserRepository,
-            },
+            contracts::{session_repository::SessionRepository, user_repository::UserRepository},
             enums::Role,
         },
         infrastructure::sqlx::{
@@ -39,9 +37,7 @@ impl StoreService {
         let store_repo = SqlxStoreRepository::new(state.db.clone());
         let existing_store = store_repo.find_by_name(&payload.store_name).await?;
         if existing_store.is_some() {
-            return Err(AppError::Conflict(
-                "Store name already exists".to_string(),
-            ));
+            return Err(AppError::Conflict("Store name already exists".to_string()));
         }
 
         // 2. Verificar que el admin email no esté registrado (global)
@@ -96,11 +92,8 @@ impl StoreService {
         tx.commit().await?;
 
         // 5. Generar tokens JWT
-        let token_pair = jwt::generate_tokens(
-            &user.id.to_string(),
-            &user.email,
-            "admin",
-        )?;
+        let token_pair =
+            jwt::generate_tokens(&user.id.to_string(), &user.email, "admin", Some(store.id))?;
 
         // 6. Crear sesión con refresh token
         let session_repo = SqlxSessionRepository::new(state.db.clone());

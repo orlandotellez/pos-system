@@ -1,4 +1,6 @@
-use jsonwebtoken::{decode, encode, errors::Error as JwtError, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{
+    DecodingKey, EncodingKey, Header, Validation, decode, encode, errors::Error as JwtError,
+};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use uuid::Uuid;
@@ -13,6 +15,11 @@ pub struct AccessTokenClaims {
     pub sub: String,
     pub email: String,
     pub role: String,
+    /// `None` para superadmins / usuarios sin tienda asignada aún.
+    /// Los tokens viejos que no tenían este campo se deserializan con `None`
+    /// gracias a `#[serde(default)]` → cero tokens quedan inválidos.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub store_id: Option<Uuid>,
     pub jti: String,
     pub exp: usize,
     pub iat: usize,
@@ -31,15 +38,23 @@ pub struct TokenPair {
     pub refresh_token: String,
 }
 
-pub fn generate_tokens(user_id: &str, email: &str, role: &str) -> Result<TokenPair, JwtError> {
+/// Genera access + refresh token.
+/// `store_id` es opcional: si el usuario todavía no tiene tienda (admin global,
+/// pending invite, etc.) pasá `None`. El `store_guard` va a rechazarlo después.
+pub fn generate_tokens(
+    user_id: &str,
+    email: &str,
+    role: &str,
+    store_id: Option<Uuid>,
+) -> Result<TokenPair, JwtError> {
     let now = OffsetDateTime::now_utc().unix_timestamp() as usize;
-
     let jti = Uuid::new_v4().to_string();
 
     let access_claims = AccessTokenClaims {
         sub: user_id.to_string(),
         email: email.to_string(),
         role: role.to_string(),
+        store_id,
         jti: jti.clone(),
         iat: now,
         exp: now + ACCESS_TOKEN_EXPIRY_SECS as usize,

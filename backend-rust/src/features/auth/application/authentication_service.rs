@@ -61,6 +61,7 @@ impl AuthenticationService {
                 .as_ref()
                 .map(|r| r.as_str())
                 .unwrap_or("cajero"),
+            account.store_id,
         )?;
 
         // 5. Crear sesión con refresh token
@@ -134,6 +135,7 @@ impl AuthenticationService {
             &user.id.to_string(),
             &user.email,
             user.role.as_ref().map(|r| r.as_str()).unwrap_or("cajero"),
+            user.store_id,
         )?;
 
         // 7. Crear nueva sesión
@@ -219,6 +221,7 @@ impl AuthenticationService {
             &user.id.to_string(),
             &user.email,
             user.role.as_ref().map(|r| r.as_str()).unwrap_or("cajero"),
+            user.store_id,
         )?;
 
         // 7. Crear nueva sesión
