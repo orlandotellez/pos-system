@@ -82,4 +82,19 @@ impl SupplierService {
 
         Ok(SupplierResponse::from(supplier))
     }
+
+    pub async fn delete_supplier(
+        state: &AppState,
+        store_id: Uuid,
+        id: Uuid,
+    ) -> Result<(), AppError> {
+        let repo: SqlxSupplierRepository = SqlxSupplierRepository::new(state.db.clone());
+
+        let deleted: bool = repo.soft_delete(store_id, id).await?;
+        if !deleted {
+            return Err(AppError::NotFound("Supplier not found".to_string()));
+        }
+
+        Ok(())
+    }
 }

@@ -1,4 +1,4 @@
-use sqlx::{PgPool, Postgres, QueryBuilder};
+use sqlx::{PgPool, Postgres, QueryBuilder, postgres::PgQueryResult};
 use uuid::Uuid;
 
 use crate::{
@@ -222,32 +222,32 @@ impl SupplierRepository for SqlxSupplierRepository {
         let supplier: Option<Supplier> = sqlx::query_as!(
             Supplier,
             r#"
-        UPDATE suppliers SET
-            name              = COALESCE($1, name),
-            contact_name      = COALESCE($2, contact_name),
-            email             = COALESCE($3, email),
-            phone             = COALESCE($4, phone),
-            address           = COALESCE($5, address),
-            notes             = COALESCE($6, notes),
-            is_active         = COALESCE($7, is_active),
-            updated_at        = NOW()
-        WHERE id = $8
-          AND store_id = $9
-          AND deleted_at IS NULL
-        RETURNING
-            id,
-            name,
-            contact_name,
-            email,
-            phone,
-            address,
-            notes,
-            is_active,
-            store_id,
-            created_at,
-            updated_at,
-            deleted_at
-        "#,
+            UPDATE suppliers SET
+                name              = COALESCE($1, name),
+                contact_name      = COALESCE($2, contact_name),
+                email             = COALESCE($3, email),
+                phone             = COALESCE($4, phone),
+                address           = COALESCE($5, address),
+                notes             = COALESCE($6, notes),
+                is_active         = COALESCE($7, is_active),
+                updated_at        = NOW()
+            WHERE id = $8
+              AND store_id = $9
+              AND deleted_at IS NULL
+            RETURNING
+                id,
+                name,
+                contact_name,
+                email,
+                phone,
+                address,
+                notes,
+                is_active,
+                store_id,
+                created_at,
+                updated_at,
+                deleted_at
+            "#,
             data.name,
             data.contact_name,
             data.email,
@@ -262,5 +262,24 @@ impl SupplierRepository for SqlxSupplierRepository {
         .await?;
 
         Ok(supplier)
+    }
+
+    async fn soft_delete(&self, store_id: Uuid, id: Uuid) -> Result<bool, AppError> {
+        let result: PgQueryResult = sqlx::query!(
+            r#"
+            UPDATE suppliers
+            SET deleted_at = NOW(),
+                updated_at = NOW()
+            WHERE id = $1
+              AND store_id = $2
+              AND deleted_at IS NULL
+            "#,
+            id,
+            store_id,
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(result.rows_affected() > 0)
     }
 }

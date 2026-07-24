@@ -11,7 +11,10 @@ use crate::{
         application::supplier_service::SupplierService,
         domain::entities::{CreateSupplierData, UpdateSupplierData},
         infrastructure::{
-            mappers::{SupplierDetailResponse, SupplierListResponse, SupplierResponse},
+            mappers::{
+                DeleteSupplierResponse, SupplierDetailResponse, SupplierListResponse,
+                SupplierResponse,
+            },
             models::list_suppliers_params::ListSupplierParams,
         },
         presentation::dto::request::{
@@ -108,4 +111,20 @@ pub async fn update_supplier(
         SupplierService::update_supplier(&state, store_id, id, data).await?;
 
     Ok(Json(response))
+}
+
+pub async fn delete_supplier(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<DeleteSupplierResponse>, AppError> {
+    let store_id: Uuid = claims
+        .store_id
+        .ok_or_else(|| AppError::Unauthorized("No store context in token".to_string()))?;
+
+    SupplierService::delete_supplier(&state, store_id, id).await?;
+
+    Ok(Json(DeleteSupplierResponse {
+        message: "Supplier deleted successfully".to_string(),
+    }))
 }

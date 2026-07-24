@@ -36,4 +36,6 @@ pub trait SupplierRepository: Send + Sync {
         id: Uuid,
         data: &UpdateSupplierData,
     ) -> Result<Option<Supplier>, AppError>;
+
+    async fn soft_delete(&self, store_id: Uuid, id: Uuid) -> Result<bool, AppError>;
 }
