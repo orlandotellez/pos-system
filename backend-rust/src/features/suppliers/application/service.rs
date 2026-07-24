@@ -7,7 +7,10 @@ use crate::{
             entities::{CreateSupplierData, Supplier, UpdateSupplierData},
         },
         infrastructure::{
-            mappers::{SupplierDetailResponse, SupplierListResponse, SupplierResponse},
+            mappers::{
+                supplier_detail_response::SupplierDetailResponse,
+                supplier_list_response::SupplierListResponse, supplier_response::SupplierResponse,
+            },
             models::{
                 list_suppliers_params::ListSupplierParams, paginated_result::PaginatedResult,
             },

@@ -8,12 +8,13 @@ use validator::Validate;
 
 use crate::{
     features::suppliers::{
-        application::supplier_service::SupplierService,
+        application::service::SupplierService,
         domain::entities::{CreateSupplierData, UpdateSupplierData},
         infrastructure::{
             mappers::{
-                DeleteSupplierResponse, SupplierDetailResponse, SupplierListResponse,
-                SupplierResponse,
+                delete_supplier_response::DeleteSupplierResponse,
+                supplier_detail_response::SupplierDetailResponse,
+                supplier_list_response::SupplierListResponse, supplier_response::SupplierResponse,
             },
             models::list_suppliers_params::ListSupplierParams,
         },

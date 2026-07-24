@@ -1,7 +1,7 @@
 use axum::{Router, middleware, routing::get};
 
 use crate::{
-    features::suppliers::presentation::handlers::supplier_handler::{
+    features::suppliers::presentation::handler::{
         create_supplier, delete_supplier, get_supplier, list_suppliers, update_supplier,
     },
     shared::{security::auth_guard::require_auth_middleware, state::app_state::AppState},

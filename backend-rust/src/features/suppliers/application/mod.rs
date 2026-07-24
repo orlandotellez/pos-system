@@ -1,1 +1,1 @@
-pub mod supplier_service;
+pub mod service;
