@@ -1,1 +1,1 @@
-pub mod store_service;
+pub mod service;

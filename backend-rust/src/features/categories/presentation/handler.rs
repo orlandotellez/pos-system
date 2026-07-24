@@ -2,8 +2,7 @@ use axum::{Extension, Json, extract::State};
 
 use crate::{
     features::categories::{
-        application::category_service::CategoryService,
-        infrastructure::mapper::CategoryListResponse,
+        application::service::CategoryService, infrastructure::mapper::CategoryListResponse,
     },
     shared::{errors::app_error::AppError, security::Claims, state::app_state::AppState},
 };

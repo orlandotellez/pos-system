@@ -1,10 +1,9 @@
-use axum::{routing::post, Router};
+use axum::{Router, routing::post};
 
 use crate::{
-    features::stores::presentation::handlers::store_handler,
-    shared::state::app_state::AppState,
+    features::stores::presentation::handler::register_store, shared::state::app_state::AppState,
 };
 
 pub fn routes() -> Router<AppState> {
-    Router::new().route("/register-store", post(store_handler::register_store))
+    Router::new().route("/register-store", post(register_store))
 }

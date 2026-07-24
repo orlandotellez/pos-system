@@ -4,7 +4,7 @@ use validator::Validate;
 
 use crate::{
     features::stores::{
-        application::store_service::StoreService,
+        application::service::StoreService,
         presentation::dto::{request::RegisterStoreRequest, response::RegisterStoreResponse},
     },
     shared::{
@@ -20,8 +20,7 @@ pub async fn register_store(
 ) -> Result<(StatusCode, CookieJar, Json<RegisterStoreResponse>), AppError> {
     payload.validate()?;
 
-    let response: RegisterStoreResponse =
-        StoreService::register_store(&state, payload).await?;
+    let response: RegisterStoreResponse = StoreService::register_store(&state, payload).await?;
 
     let jar: CookieJar = set_auth_cookies(jar, &response.access_token, &response.refresh_token);
 

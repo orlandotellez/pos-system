@@ -1,7 +1,7 @@
 use axum::{Router, middleware, routing::get};
 
 use crate::{
-    features::categories::presentation::handlers::category_handler::list_categories,
+    features::categories::presentation::handler::list_categories,
     shared::{security::auth_guard::require_auth_middleware, state::app_state::AppState},
 };
 
