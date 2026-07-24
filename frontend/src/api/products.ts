@@ -52,8 +52,8 @@ export interface CreateProductPayload {
   name: string;
   unit_type?: string;
   unit_quantity?: number;
-  category_id?: string;
-  supplier_id?: string;
+  category_id?: string | null;
+  supplier_id?: string | null;
   price: number;
   cost?: number;
   tax_rate?: number;
@@ -62,7 +62,7 @@ export interface CreateProductPayload {
   active?: boolean;
 }
 
-export interface UpdateProductPayload extends Partial<CreateProductPayload> {}
+export interface UpdateProductPayload extends Partial<CreateProductPayload> { }
 
 
 

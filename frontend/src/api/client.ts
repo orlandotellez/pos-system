@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api/v1";
+import { readApiUrl } from "@/lib/api-config";
+import { crossFetch } from "@/lib/fetch";
 
 export class ApiError extends Error {
   status: number;
@@ -41,7 +42,7 @@ async function request<T>(
   body?: unknown,
   params?: Record<string, string | number | boolean | undefined>,
 ): Promise<T> {
-  const url = new URL(`${BASE_URL}${path}`);
+  const url = new URL(`${readApiUrl()}${path}`);
 
   if (params) {
     for (const [key, val] of Object.entries(params)) {
@@ -60,7 +61,7 @@ async function request<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(url.toString(), {
+  const res = await crossFetch(url.toString(), {
     method,
     headers,
     credentials: "include",
