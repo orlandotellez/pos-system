@@ -1,0 +1,65 @@
+import { crossFetch } from "@/lib/fetch";
+
+export const API_URL_STORAGE_KEY = "POS_API_URL";
+
+export const BOOTSTRAP_URL =
+  "https://pub-17156739f1d5412cb62a579bb0ccbc35.r2.dev/config-api.json";
+
+export const BOOTSTRAP_FETCH_TIMEOUT_MS = 2500;
+
+export const DEFAULT_API_URL = "http://localhost:3000/api/v1";
+
+export function isValidApiUrl(value: unknown): value is string {
+  return typeof value === "string" && /^https?:\/\/[^\s]+$/i.test(value);
+}
+
+export function readApiUrl(): string {
+  try {
+    const stored = localStorage.getItem(API_URL_STORAGE_KEY);
+    if (isValidApiUrl(stored)) return stored;
+  } catch { }
+  return DEFAULT_API_URL;
+}
+
+export function writeApiUrl(value: string): void {
+  try {
+    localStorage.setItem(API_URL_STORAGE_KEY, value);
+  } catch { }
+}
+
+export async function fetchAndStoreApiUrl(
+  externalSignal?: AbortSignal,
+): Promise<boolean> {
+  if (externalSignal?.aborted) return false;
+
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(
+    () => controller.abort(),
+    BOOTSTRAP_FETCH_TIMEOUT_MS,
+  );
+
+  const onAbort = () => controller.abort();
+  externalSignal?.addEventListener("abort", onAbort);
+
+  try {
+    const response = await crossFetch(BOOTSTRAP_URL, {
+      signal: controller.signal,
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-cache",
+    });
+    if (!response.ok) return false;
+
+    const data = (await response.json()) as { current_api_url?: unknown };
+    if (!isValidApiUrl(data.current_api_url)) return false;
+    if (externalSignal?.aborted) return false;
+    writeApiUrl(data.current_api_url);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    window.clearTimeout(timeoutId);
+    externalSignal?.removeEventListener("abort", onAbort);
+  }
+}
