@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Search, X } from "lucide-react";
-import { productsApi, type CreateProductPayload, type UpdateProductPayload } from "@/api/products";
+import { productsApi, type CreateProductPayload } from "@/api/products";
 import { categoriesApi } from "@/api/categories";
 import { suppliersApi } from "@/api/suppliers";
 import type { Product, Category, Supplier } from "@/api";
@@ -99,23 +99,29 @@ export default function Products() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // En creación los ids vacíos van como `undefined` (el server los ignora).
+      // En edición los ids vacíos van como `null` (el server los desenlaza).
+      const emptyToNull = !isNew;
+      const valueOr = (v: string) => v || (emptyToNull ? null : undefined);
+
       const data: CreateProductPayload = {
         name: form.name,
         barcode: form.barcode || undefined,
         unit_type: form.unit_type || undefined,
         unit_quantity: form.unit_quantity || undefined,
-        category_id: form.category_id || (isNew ? undefined : null),
-        supplier_id: form.supplier_id || (isNew ? undefined : null),
+        category_id: valueOr(form.category_id),
+        supplier_id: valueOr(form.supplier_id),
         price: form.price,
         cost: form.cost || undefined,
         tax_rate: form.tax_rate,
         stock: form.stock,
         low_stock_threshold: form.low_stock_threshold,
       };
+
       if (isNew) {
         await productsApi.create(data);
       } else if (editing) {
-        await productsApi.update(editing.id, data as UpdateProductPayload);
+        await productsApi.update(editing.id, data);
       }
       setEditing(null);
       cacheClear("products");
