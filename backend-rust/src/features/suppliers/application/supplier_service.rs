@@ -2,9 +2,12 @@ use uuid::Uuid;
 
 use crate::{
     features::suppliers::{
-        domain::{contracts::supplier_repository::SupplierRepository, entities::Supplier},
+        domain::{
+            contracts::supplier_repository::SupplierRepository,
+            entities::{CreateSupplierData, Supplier},
+        },
         infrastructure::{
-            mappers::{SupplierDetailResponse, SupplierListResponse},
+            mappers::{SupplierDetailResponse, SupplierListResponse, SupplierResponse},
             models::{
                 list_suppliers_params::ListSupplierParams, paginated_result::PaginatedResult,
             },
@@ -52,5 +55,15 @@ impl SupplierService {
         let product_count: i64 = repo.count_products_by_supplier(store_id, id).await?;
 
         Ok(SupplierDetailResponse::build(supplier, product_count))
+    }
+
+    pub async fn create_supplier(
+        state: &AppState,
+        store_id: Uuid,
+        data: CreateSupplierData,
+    ) -> Result<SupplierResponse, AppError> {
+        let repo: SqlxSupplierRepository = SqlxSupplierRepository::new(state.db.clone());
+        let supplier: Supplier = repo.create(store_id, &data).await?;
+        Ok(SupplierResponse::from(supplier))
     }
 }

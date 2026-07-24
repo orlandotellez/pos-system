@@ -17,3 +17,14 @@ pub struct Supplier {
     pub updated_at: Option<DateTime<Utc>>,
     pub deleted_at: Option<DateTime<Utc>>,
 }
+
+#[derive(Debug)]
+pub struct CreateSupplierData {
+    pub name: String,
+    pub contact_name: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub address: Option<String>,
+    pub notes: Option<String>,
+    pub is_active: Option<bool>,
+}

@@ -1,17 +1,20 @@
 use axum::{
     Extension, Json,
     extract::{Path, Query, State},
+    http::StatusCode,
 };
 use uuid::Uuid;
+use validator::Validate;
 
 use crate::{
     features::suppliers::{
         application::supplier_service::SupplierService,
+        domain::entities::CreateSupplierData,
         infrastructure::{
-            mappers::{SupplierDetailResponse, SupplierListResponse},
+            mappers::{SupplierDetailResponse, SupplierListResponse, SupplierResponse},
             models::list_suppliers_params::ListSupplierParams,
         },
-        presentation::dto::request::SupplierQueryParams,
+        presentation::dto::request::{CreateSupplierPayload, SupplierQueryParams},
     },
     shared::{errors::app_error::AppError, security::Claims, state::app_state::AppState},
 };
@@ -64,4 +67,23 @@ pub async fn get_supplier(
         SupplierService::get_supplier_by_id(&state, store_id, id).await?;
 
     Ok(Json(response))
+}
+
+pub async fn create_supplier(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+    Json(payload): Json<CreateSupplierPayload>,
+) -> Result<(StatusCode, Json<SupplierResponse>), AppError> {
+    let store_id: Uuid = claims
+        .store_id
+        .ok_or_else(|| AppError::Unauthorized("No store context in token".to_string()))?;
+
+    payload.validate()?;
+
+    let data: CreateSupplierData = payload.into_domain()?;
+
+    let response: SupplierResponse =
+        SupplierService::create_supplier(&state, store_id, data).await?;
+
+    Ok((StatusCode::CREATED, Json(response)))
 }

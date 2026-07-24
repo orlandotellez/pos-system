@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use crate::{
     features::suppliers::{
+        domain::entities::CreateSupplierData,
         domain::entities::Supplier,
         infrastructure::models::{
             list_suppliers_params::ListSupplierParams, paginated_result::PaginatedResult,
@@ -26,4 +27,7 @@ pub trait SupplierRepository: Send + Sync {
         store_id: Uuid,
         supplier_id: Uuid,
     ) -> Result<i64, AppError>;
+
+    async fn create(&self, store_id: Uuid, data: &CreateSupplierData)
+    -> Result<Supplier, AppError>;
 }

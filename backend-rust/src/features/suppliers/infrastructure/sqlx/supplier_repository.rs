@@ -3,7 +3,10 @@ use uuid::Uuid;
 
 use crate::{
     features::suppliers::{
-        domain::{contracts::supplier_repository::SupplierRepository, entities::Supplier},
+        domain::{
+            contracts::supplier_repository::SupplierRepository,
+            entities::{CreateSupplierData, Supplier},
+        },
         infrastructure::models::{
             list_suppliers_params::ListSupplierParams, paginated_result::PaginatedResult,
         },
@@ -154,5 +157,59 @@ impl SupplierRepository for SqlxSupplierRepository {
         .await?;
 
         Ok(count)
+    }
+
+    async fn create(
+        &self,
+        store_id: Uuid,
+        data: &CreateSupplierData,
+    ) -> Result<Supplier, AppError> {
+        let new_id: Uuid = Uuid::new_v4();
+
+        let supplier: Supplier = sqlx::query_as!(
+            Supplier,
+            r#"
+            INSERT INTO suppliers (
+                id, 
+                name, 
+                contact_name, 
+                email, 
+                phone, 
+                address, 
+                notes,
+                is_active, 
+                store_id, 
+                created_at, 
+                updated_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+            RETURNING
+                id, 
+                name, 
+                contact_name, 
+                email, 
+                phone, 
+                address, 
+                notes,
+                is_active, 
+                store_id, 
+                created_at, 
+                updated_at, 
+                deleted_at
+            "#,
+            new_id,
+            data.name,
+            data.contact_name,
+            data.email,
+            data.phone,
+            data.address,
+            data.notes,
+            data.is_active.unwrap_or(true), // columna es NOT NULL DEFAULT true
+            store_id,
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(supplier)
     }
 }
