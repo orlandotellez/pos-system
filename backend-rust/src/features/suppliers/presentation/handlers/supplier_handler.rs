@@ -9,12 +9,14 @@ use validator::Validate;
 use crate::{
     features::suppliers::{
         application::supplier_service::SupplierService,
-        domain::entities::CreateSupplierData,
+        domain::entities::{CreateSupplierData, UpdateSupplierData},
         infrastructure::{
             mappers::{SupplierDetailResponse, SupplierListResponse, SupplierResponse},
             models::list_suppliers_params::ListSupplierParams,
         },
-        presentation::dto::request::{CreateSupplierPayload, SupplierQueryParams},
+        presentation::dto::request::{
+            CreateSupplierPayload, SupplierQueryParams, UpdateSupplierPayload,
+        },
     },
     shared::{errors::app_error::AppError, security::Claims, state::app_state::AppState},
 };
@@ -86,4 +88,24 @@ pub async fn create_supplier(
         SupplierService::create_supplier(&state, store_id, data).await?;
 
     Ok((StatusCode::CREATED, Json(response)))
+}
+
+pub async fn update_supplier(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+    Path(id): Path<Uuid>,
+    Json(payload): Json<UpdateSupplierPayload>,
+) -> Result<Json<SupplierResponse>, AppError> {
+    let store_id: Uuid = claims
+        .store_id
+        .ok_or_else(|| AppError::Unauthorized("No store context in token".to_string()))?;
+
+    payload.validate()?;
+
+    let data: UpdateSupplierData = payload.into_domain()?;
+
+    let response: SupplierResponse =
+        SupplierService::update_supplier(&state, store_id, id, data).await?;
+
+    Ok(Json(response))
 }

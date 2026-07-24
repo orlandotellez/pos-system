@@ -5,7 +5,7 @@ use crate::{
     features::suppliers::{
         domain::{
             contracts::supplier_repository::SupplierRepository,
-            entities::{CreateSupplierData, Supplier},
+            entities::{CreateSupplierData, Supplier, UpdateSupplierData},
         },
         infrastructure::models::{
             list_suppliers_params::ListSupplierParams, paginated_result::PaginatedResult,
@@ -208,6 +208,57 @@ impl SupplierRepository for SqlxSupplierRepository {
             store_id,
         )
         .fetch_one(&self.pool)
+        .await?;
+
+        Ok(supplier)
+    }
+
+    async fn update(
+        &self,
+        store_id: Uuid,
+        id: Uuid,
+        data: &UpdateSupplierData,
+    ) -> Result<Option<Supplier>, AppError> {
+        let supplier: Option<Supplier> = sqlx::query_as!(
+            Supplier,
+            r#"
+        UPDATE suppliers SET
+            name              = COALESCE($1, name),
+            contact_name      = COALESCE($2, contact_name),
+            email             = COALESCE($3, email),
+            phone             = COALESCE($4, phone),
+            address           = COALESCE($5, address),
+            notes             = COALESCE($6, notes),
+            is_active         = COALESCE($7, is_active),
+            updated_at        = NOW()
+        WHERE id = $8
+          AND store_id = $9
+          AND deleted_at IS NULL
+        RETURNING
+            id,
+            name,
+            contact_name,
+            email,
+            phone,
+            address,
+            notes,
+            is_active,
+            store_id,
+            created_at,
+            updated_at,
+            deleted_at
+        "#,
+            data.name,
+            data.contact_name,
+            data.email,
+            data.phone,
+            data.address,
+            data.notes,
+            data.is_active,
+            id,
+            store_id,
+        )
+        .fetch_optional(&self.pool)
         .await?;
 
         Ok(supplier)

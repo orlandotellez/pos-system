@@ -4,7 +4,7 @@ use crate::{
     features::suppliers::{
         domain::{
             contracts::supplier_repository::SupplierRepository,
-            entities::{CreateSupplierData, Supplier},
+            entities::{CreateSupplierData, Supplier, UpdateSupplierData},
         },
         infrastructure::{
             mappers::{SupplierDetailResponse, SupplierListResponse, SupplierResponse},
@@ -64,6 +64,22 @@ impl SupplierService {
     ) -> Result<SupplierResponse, AppError> {
         let repo: SqlxSupplierRepository = SqlxSupplierRepository::new(state.db.clone());
         let supplier: Supplier = repo.create(store_id, &data).await?;
+        Ok(SupplierResponse::from(supplier))
+    }
+
+    pub async fn update_supplier(
+        state: &AppState,
+        store_id: Uuid,
+        id: Uuid,
+        data: UpdateSupplierData,
+    ) -> Result<SupplierResponse, AppError> {
+        let repo: SqlxSupplierRepository = SqlxSupplierRepository::new(state.db.clone());
+
+        let supplier: Supplier = repo
+            .update(store_id, id, &data)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Supplier not found".to_string()))?;
+
         Ok(SupplierResponse::from(supplier))
     }
 }

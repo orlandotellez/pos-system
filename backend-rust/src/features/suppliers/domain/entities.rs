@@ -28,3 +28,14 @@ pub struct CreateSupplierData {
     pub notes: Option<String>,
     pub is_active: Option<bool>,
 }
+
+#[derive(Debug, Default)]
+pub struct UpdateSupplierData {
+    pub name: Option<String>,
+    pub contact_name: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub address: Option<String>,
+    pub notes: Option<String>,
+    pub is_active: Option<bool>,
+}
